@@ -6,15 +6,33 @@
 //
 
 import SwiftUI
+import CoreData
+
+// MARK: - Core Data Manager
+class CoreDataManager: ObservableObject {
+    static let shared = CoreDataManager()
+    
+    let container: NSPersistentContainer
+    
+    init() {
+        container = NSPersistentContainer(name: "EisenhowerMatrixApp")
+        container.loadPersistentStores { description, error in
+            if let error = error {
+                print("Core Data failed to load: \(error.localizedDescription)")
+            }
+        }
+    }
+}
 
 // MARK: - Task Model
-struct Task: Identifiable, Codable {
-    let id = UUID()
+struct TaskItem: Identifiable {
+    let id: UUID
     var title: String
     var description: String
     var priority: Priority
-    var isCompleted: Bool = false
-    var dateCreated: Date = Date()
+    var isCompleted: Bool
+    var dateCreated: Date
+    var personId: UUID
     
     enum Priority: String, CaseIterable, Codable {
         case urgentImportant = "Urgent & Important"
@@ -48,89 +66,199 @@ struct Task: Identifiable, Codable {
             }
         }
     }
-    
-    // Custom coding keys to exclude id from Codable
-    enum CodingKeys: String, CodingKey {
-        case title, description, priority, isCompleted, dateCreated
-    }
-    
-    init(title: String, description: String, priority: Priority) {
-        self.title = title
-        self.description = description
-        self.priority = priority
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        title = try container.decode(String.self, forKey: .title)
-        description = try container.decode(String.self, forKey: .description)
-        priority = try container.decode(Priority.self, forKey: .priority)
-        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
-        dateCreated = try container.decode(Date.self, forKey: .dateCreated)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(title, forKey: .title)
-        try container.encode(description, forKey: .description)
-        try container.encode(priority, forKey: .priority)
-        try container.encode(isCompleted, forKey: .isCompleted)
-        try container.encode(dateCreated, forKey: .dateCreated)
-    }
 }
 
-// MARK: - Task Manager
-class TaskManager: ObservableObject {
-    @Published var tasks: [Task] = []
+// MARK: - Person Model
+struct PersonItem: Identifiable {
+    let id: UUID
+    var name: String
+    var email: String
+    var dateCreated: Date
+}
+
+// MARK: - Data Manager
+class DataManager: ObservableObject {
+    @Published var currentPerson: PersonItem?
+    @Published var tasks: [TaskItem] = []
+    @Published var persons: [PersonItem] = []
+    
+    private let context: NSManagedObjectContext
     
     init() {
-        loadSampleData()
-    }
-    
-    func addTask(_ task: Task) {
-        tasks.append(task)
-    }
-    
-    func toggleTaskCompletion(_ task: Task) {
-        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[index].isCompleted.toggle()
+        self.context = CoreDataManager.shared.container.viewContext
+        loadPersons()
+        if let firstPerson = persons.first {
+            currentPerson = firstPerson
+            loadTasksForPerson(firstPerson.id)
         }
     }
     
-    func deleteTask(_ task: Task) {
-        tasks.removeAll { $0.id == task.id }
+    // MARK: - Person Management
+    func addPerson(name: String, email: String) {
+        let person = Person(context: context)
+        person.id = UUID()
+        person.name = name
+        person.email = email
+        person.dateCreated = Date()
+        
+        saveContext()
+        loadPersons()
     }
     
-    func tasksForPriority(_ priority: Task.Priority) -> [Task] {
+    func loadPersons() {
+        let request: NSFetchRequest<Person> = Person.fetchRequest()
+        
+        do {
+            let personEntities = try context.fetch(request)
+            persons = personEntities.map { person in
+                PersonItem(
+                    id: person.id ?? UUID(),
+                    name: person.name ?? "",
+                    email: person.email ?? "",
+                    dateCreated: person.dateCreated ?? Date()
+                )
+            }
+        } catch {
+            print("Error loading persons: \(error)")
+        }
+    }
+    
+    func selectPerson(_ person: PersonItem) {
+        currentPerson = person
+        loadTasksForPerson(person.id)
+    }
+    
+    // MARK: - Task Management
+    func addTask(title: String, description: String, priority: TaskItem.Priority) {
+        guard let currentPerson = currentPerson else { return }
+        
+        let task = Task(context: context)
+        task.id = UUID()
+        task.title = title
+        task.taskDescription = description
+        task.priority = priority.rawValue
+        task.isCompleted = false
+        task.dateCreated = Date()
+        task.personId = currentPerson.id
+        
+        saveContext()
+        loadTasksForPerson(currentPerson.id)
+    }
+    
+    func loadTasksForPerson(_ personId: UUID) {
+        let request: NSFetchRequest<Task> = Task.fetchRequest()
+        request.predicate = NSPredicate(format: "personId == %@", personId as CVarArg)
+        
+        do {
+            let taskEntities = try context.fetch(request)
+            tasks = taskEntities.map { task in
+                TaskItem(
+                    id: task.id ?? UUID(),
+                    title: task.title ?? "",
+                    description: task.taskDescription ?? "",
+                    priority: TaskItem.Priority(rawValue: task.priority ?? "") ?? .urgentImportant,
+                    isCompleted: task.isCompleted,
+                    dateCreated: task.dateCreated ?? Date(),
+                    personId: task.personId ?? UUID()
+                )
+            }
+        } catch {
+            print("Error loading tasks: \(error)")
+        }
+    }
+    
+    func toggleTaskCompletion(_ task: TaskItem) {
+        let request: NSFetchRequest<Task> = Task.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
+        
+        do {
+            let tasks = try context.fetch(request)
+            if let taskToUpdate = tasks.first {
+                taskToUpdate.isCompleted.toggle()
+                saveContext()
+                loadTasksForPerson(task.personId)
+            }
+        } catch {
+            print("Error updating task: \(error)")
+        }
+    }
+    
+    func deleteTask(_ task: TaskItem) {
+        let request: NSFetchRequest<Task> = Task.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
+        
+        do {
+            let tasks = try context.fetch(request)
+            if let taskToDelete = tasks.first {
+                context.delete(taskToDelete)
+                saveContext()
+                loadTasksForPerson(task.personId)
+            }
+        } catch {
+            print("Error deleting task: \(error)")
+        }
+    }
+    
+    func tasksForPriority(_ priority: TaskItem.Priority) -> [TaskItem] {
         return tasks.filter { $0.priority == priority }
     }
     
-    private func loadSampleData() {
-        tasks = [
-            // Urgent & Important - 2 tasks
-            Task(title: "Deadline project", description: "Complete the urgent project by end of week", priority: .urgentImportant),
-            Task(title: "Team meeting", description: "Prepare for tomorrow's critical meeting", priority: .urgentImportant),
-            
-            // Urgent & Not Important - 2 tasks
-            Task(title: "Email responses", description: "Reply to urgent emails from clients", priority: .urgentNotImportant),
-            Task(title: "Phone calls", description: "Return urgent calls from suppliers", priority: .urgentNotImportant),
-            
-            // Not Urgent & Important - 2 tasks
-            Task(title: "Strategic planning", description: "Plan next quarter goals and objectives", priority: .notUrgentImportant),
-            Task(title: "Skill development", description: "Learn new technology for future projects", priority: .notUrgentImportant),
-            
-            // Not Urgent & Not Important - 2 tasks
-            Task(title: "Social media", description: "Check social media updates", priority: .notUrgentNotImportant),
-            Task(title: "Some interruptions", description: "Handle minor interruptions and distractions", priority: .notUrgentNotImportant)
+    func clearAllTasksForCurrentPerson() {
+        guard let currentPerson = currentPerson else { return }
+        
+        let request: NSFetchRequest<Task> = Task.fetchRequest()
+        request.predicate = NSPredicate(format: "personId == %@", currentPerson.id as CVarArg)
+        
+        do {
+            let tasksToDelete = try context.fetch(request)
+            for task in tasksToDelete {
+                context.delete(task)
+            }
+            saveContext()
+            loadTasksForPerson(currentPerson.id)
+        } catch {
+            print("Error clearing tasks: \(error)")
+        }
+    }
+    
+    func loadSampleDataForCurrentPerson() {
+        guard let currentPerson = currentPerson else { return }
+        
+        // Clear existing tasks first
+        clearAllTasksForCurrentPerson()
+        
+        // Add exactly 2 tasks for each priority
+        let sampleTasks = [
+            ("Deadline project", "Complete the urgent project by end of week", TaskItem.Priority.urgentImportant),
+            ("Team meeting", "Prepare for tomorrow's critical meeting", TaskItem.Priority.urgentImportant),
+            ("Email responses", "Reply to urgent emails from clients", TaskItem.Priority.urgentNotImportant),
+            ("Phone calls", "Return urgent calls from suppliers", TaskItem.Priority.urgentNotImportant),
+            ("Strategic planning", "Plan next quarter goals and objectives", TaskItem.Priority.notUrgentImportant),
+            ("Skill development", "Learn new technology for future projects", TaskItem.Priority.notUrgentImportant),
+            ("Social media", "Check social media updates", TaskItem.Priority.notUrgentNotImportant),
+            ("Some interruptions", "Handle minor interruptions and distractions", TaskItem.Priority.notUrgentNotImportant)
         ]
+        
+        for (title, description, priority) in sampleTasks {
+            addTask(title: title, description: description, priority: priority)
+        }
+    }
+    
+    private func saveContext() {
+        do {
+            try context.save()
+        } catch {
+            print("Error saving context: \(error)")
+        }
     }
 }
 
 // MARK: - Main Content View
 struct ContentView: View {
-    @StateObject private var taskManager = TaskManager()
+    @StateObject private var dataManager = DataManager()
     @State private var showingAddTask = false
-    @State private var selectedPriority: Task.Priority?
+    @State private var showingPersonSelector = false
+    @State private var selectedPriority: TaskItem.Priority?
     
     var body: some View {
         NavigationView {
@@ -143,21 +271,15 @@ struct ContentView: View {
                 
                 Spacer()
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingAddTask = true }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.blue)
-                    }
-                }
-            }
         }
         .sheet(isPresented: $showingAddTask) {
-            AddTaskView(taskManager: taskManager)
+            AddTaskView(dataManager: dataManager)
         }
         .sheet(item: $selectedPriority) { priority in
-            PriorityDetailView(taskManager: taskManager, priority: priority)
+            PriorityDetailView(dataManager: dataManager, priority: priority)
+        }
+        .sheet(isPresented: $showingPersonSelector) {
+            PersonSelectorView(dataManager: dataManager)
         }
     }
     
@@ -171,6 +293,18 @@ struct ContentView: View {
                 
                 Spacer()
                 
+                Button(action: { showingPersonSelector = true }) {
+                    Image(systemName: "person.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.green)
+                }
+                
+                Button(action: { dataManager.loadSampleDataForCurrentPerson() }) {
+                    Image(systemName: "arrow.clockwise.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.orange)
+                }
+                
                 Button(action: { showingAddTask = true }) {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
@@ -178,9 +312,15 @@ struct ContentView: View {
                 }
             }
             
-            Text("Prioritize your tasks effectively")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            if let currentPerson = dataManager.currentPerson {
+                Text("Tasks for: \(currentPerson.name)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("Select a person to view tasks")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding()
         .background(Color(uiColor: .systemBackground))
@@ -234,7 +374,7 @@ struct ContentView: View {
     private func matrixQuadrant(
         title: String,
         subtitle: String,
-        priority: Task.Priority,
+        priority: TaskItem.Priority,
         color: Color,
         icon: String
     ) -> some View {
@@ -247,7 +387,7 @@ struct ContentView: View {
                     
                     Spacer()
                     
-                    Text("\(taskManager.tasksForPriority(priority).count)")
+                    Text("\(dataManager.tasksForPriority(priority).count)")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
@@ -286,8 +426,8 @@ struct ContentView: View {
 
 // MARK: - Priority Detail View
 struct PriorityDetailView: View {
-    @ObservedObject var taskManager: TaskManager
-    let priority: Task.Priority
+    @ObservedObject var dataManager: DataManager
+    let priority: TaskItem.Priority
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -314,13 +454,13 @@ struct PriorityDetailView: View {
                     }
                     
                     HStack {
-                        Text("\(taskManager.tasksForPriority(priority).count) tasks")
+                        Text("\(dataManager.tasksForPriority(priority).count) tasks")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
                         Spacer()
                         
-                        Text("\(taskManager.tasksForPriority(priority).filter { $0.isCompleted }.count) completed")
+                        Text("\(dataManager.tasksForPriority(priority).filter { $0.isCompleted }.count) completed")
                             .font(.caption)
                             .foregroundColor(.green)
                     }
@@ -330,8 +470,8 @@ struct PriorityDetailView: View {
                 
                 // Task List
                 List {
-                    ForEach(taskManager.tasksForPriority(priority)) { task in
-                        TaskRowView(task: task, taskManager: taskManager)
+                    ForEach(dataManager.tasksForPriority(priority)) { task in
+                        TaskRowView(task: task, dataManager: dataManager)
                     }
                     .onDelete(perform: deleteTasks)
                 }
@@ -339,6 +479,7 @@ struct PriorityDetailView: View {
             }
             .navigationTitle(priority.rawValue)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done") { dismiss() }
@@ -352,7 +493,7 @@ struct PriorityDetailView: View {
         }
     }
     
-    private func getSubtitle(for priority: Task.Priority) -> String {
+    private func getSubtitle(for priority: TaskItem.Priority) -> String {
         switch priority {
         case .urgentImportant:
             return "Do First - These require immediate attention"
@@ -366,21 +507,21 @@ struct PriorityDetailView: View {
     }
     
     private func deleteTasks(offsets: IndexSet) {
-        let tasksToDelete = taskManager.tasksForPriority(priority)
+        let tasksToDelete = dataManager.tasksForPriority(priority)
         for index in offsets {
-            taskManager.deleteTask(tasksToDelete[index])
+            dataManager.deleteTask(tasksToDelete[index])
         }
     }
 }
 
 // MARK: - Task Row View
 struct TaskRowView: View {
-    let task: Task
-    @ObservedObject var taskManager: TaskManager
+    let task: TaskItem
+    @ObservedObject var dataManager: DataManager
     
     var body: some View {
         HStack(spacing: 12) {
-            Button(action: { taskManager.toggleTaskCompletion(task) }) {
+            Button(action: { dataManager.toggleTaskCompletion(task) }) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(task.isCompleted ? .green : .gray)
                     .font(.title3)
@@ -412,12 +553,12 @@ struct TaskRowView: View {
 
 // MARK: - Add Task View
 struct AddTaskView: View {
-    @ObservedObject var taskManager: TaskManager
+    @ObservedObject var dataManager: DataManager
     @Environment(\.dismiss) private var dismiss
     
     @State private var title = ""
     @State private var description = ""
-    @State private var selectedPriority: Task.Priority = .urgentImportant
+    @State private var selectedPriority: TaskItem.Priority = .urgentImportant
     
     var body: some View {
         NavigationView {
@@ -429,7 +570,7 @@ struct AddTaskView: View {
                 
                 Section(header: Text("Priority")) {
                     Picker("Priority", selection: $selectedPriority) {
-                        ForEach(Task.Priority.allCases, id: \.self) { priority in
+                        ForEach(TaskItem.Priority.allCases, id: \.self) { priority in
                             HStack {
                                 Image(systemName: priority.icon)
                                     .foregroundColor(priority.color)
@@ -443,14 +584,14 @@ struct AddTaskView: View {
             }
             .navigationTitle("Add Task")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        let newTask = Task(title: title, description: description, priority: selectedPriority)
-                        taskManager.addTask(newTask)
+                        dataManager.addTask(title: title, description: description, priority: selectedPriority)
                         dismiss()
                     }
                     .disabled(title.isEmpty)
@@ -460,8 +601,98 @@ struct AddTaskView: View {
     }
 }
 
+// MARK: - Person Selector View
+struct PersonSelectorView: View {
+    @ObservedObject var dataManager: DataManager
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var showingAddPerson = false
+    @State private var newPersonName = ""
+    @State private var newPersonEmail = ""
+    
+    var body: some View {
+        NavigationView {
+            List {
+                ForEach(dataManager.persons) { person in
+                    Button(action: {
+                        dataManager.selectPerson(person)
+                        dismiss()
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(person.name)
+                                    .font(.headline)
+                                Text(person.email)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            if dataManager.currentPerson?.id == person.id {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+            .navigationTitle("Select Person")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Person") { showingAddPerson = true }
+                }
+            }
+            .sheet(isPresented: $showingAddPerson) {
+                AddPersonView(dataManager: dataManager)
+            }
+        }
+    }
+}
+
+// MARK: - Add Person View
+struct AddPersonView: View {
+    @ObservedObject var dataManager: DataManager
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var name = ""
+    @State private var email = ""
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Person Details")) {
+                    TextField("Name", text: $name)
+                    TextField("Email", text: $email)
+                }
+            }
+            .navigationTitle("Add Person")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        dataManager.addPerson(name: name, email: email)
+                        dismiss()
+                    }
+                    .disabled(name.isEmpty || email.isEmpty)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Extensions
-extension Task.Priority: Identifiable {
+extension TaskItem.Priority: Identifiable {
     var id: String { rawValue }
 }
 
