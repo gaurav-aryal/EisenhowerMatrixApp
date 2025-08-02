@@ -77,7 +77,6 @@ enum TaskPriority: String, CaseIterable, Codable {
         }
     }
 }
-}
 
 // MARK: - Data Manager
 class TaskManager: ObservableObject {
