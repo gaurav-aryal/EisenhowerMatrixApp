@@ -11,11 +11,11 @@ struct TaskItem: Identifiable, Codable {
     let id: UUID
     var title: String
     var description: String
-    var priority: Priority
+    var priority: TaskPriority
     var isCompleted: Bool = false
     var dateCreated: Date = Date()
     
-    init(title: String, description: String, priority: Priority) {
+    init(title: String, description: String, priority: TaskPriority) {
         self.id = UUID()
         self.title = title
         self.description = description
@@ -27,7 +27,7 @@ struct TaskItem: Identifiable, Codable {
         self.id = try container.decode(UUID.self, forKey: .id)
         self.title = try container.decode(String.self, forKey: .title)
         self.description = try container.decode(String.self, forKey: .description)
-        self.priority = try container.decode(Priority.self, forKey: .priority)
+        self.priority = try container.decode(TaskPriority.self, forKey: .priority)
         self.isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
         self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
     }
@@ -47,34 +47,36 @@ struct TaskItem: Identifiable, Codable {
         case id, title, description, priority, isCompleted, dateCreated
     }
     
-    enum Priority: String, CaseIterable, Codable {
-        case urgentImportant = "Urgent & Important"
-        case urgentNotImportant = "Urgent & Not Important"
-        case notUrgentImportant = "Not Urgent & Important"
-        case notUrgentNotImportant = "Not Urgent & Not Important"
-        
-        var color: Color {
-            switch self {
-            case .urgentImportant: return .red
-            case .urgentNotImportant: return .orange
-            case .notUrgentImportant: return .blue
-            case .notUrgentNotImportant: return .gray
-            }
-        }
-        
-        var icon: String {
-            switch self {
-            case .urgentImportant:
-                return "exclamationmark.triangle.fill"
-            case .urgentNotImportant:
-                return "⏰"
-            case .notUrgentImportant:
-                return "star.fill"
-            case .notUrgentNotImportant:
-                return "🗑️"
-            }
+}
+
+enum TaskPriority: String, CaseIterable, Codable {
+    case urgentImportant = "Urgent & Important"
+    case urgentNotImportant = "Urgent & Not Important"
+    case notUrgentImportant = "Not Urgent & Important"
+    case notUrgentNotImportant = "Not Urgent & Not Important"
+    
+    var color: Color {
+        switch self {
+        case .urgentImportant: return .red
+        case .urgentNotImportant: return .orange
+        case .notUrgentImportant: return .blue
+        case .notUrgentNotImportant: return .gray
         }
     }
+    
+    var icon: String {
+        switch self {
+        case .urgentImportant:
+            return "exclamationmark.triangle.fill"
+        case .urgentNotImportant:
+            return "⏰"
+        case .notUrgentImportant:
+            return "star.fill"
+        case .notUrgentNotImportant:
+            return "🗑️"
+        }
+    }
+}
 }
 
 // MARK: - Data Manager
@@ -85,7 +87,7 @@ class TaskManager: ObservableObject {
         loadSampleData()
     }
     
-    func addTask(title: String, description: String, priority: TaskItem.Priority) {
+    func addTask(title: String, description: String, priority: TaskPriority) {
         let newTask = TaskItem(
             title: title,
             description: description,
@@ -132,17 +134,17 @@ class TaskManager: ObservableObject {
         tasks.removeAll { $0.id == task.id }
     }
     
-    func tasksForPriority(_ priority: TaskItem.Priority) -> [TaskItem] {
+    func tasksForPriority(_ priority: TaskPriority) -> [TaskItem] {
         return tasks.filter { $0.priority == priority }
     }
     
-    func moveTask(_ task: TaskItem, to newPriority: TaskItem.Priority) {
+    func moveTask(_ task: TaskItem, to newPriority: TaskPriority) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].priority = newPriority
         }
     }
     
-    func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskItem.Priority) {
+    func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
         let priorityTasks = tasksForPriority(priority)
         guard sourceIndex < priorityTasks.count && destinationIndex < priorityTasks.count else { return }
         
@@ -157,7 +159,7 @@ class TaskManager: ObservableObject {
         }
     }
     
-    func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskItem.Priority) {
+    func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskPriority) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].title = title
             tasks[index].description = description
@@ -169,7 +171,7 @@ class TaskManager: ObservableObject {
 // MARK: - Drop View Delegate
 struct DropViewDelegate: DropDelegate {
     let taskManager: TaskManager
-    let targetPriority: TaskItem.Priority
+    let targetPriority: TaskPriority
     
     func performDrop(info: DropInfo) -> Bool {
         print("Drop attempted for \(targetPriority.rawValue)")
@@ -227,8 +229,8 @@ struct DropViewDelegate: DropDelegate {
 // MARK: - Content View
 struct ContentView: View {
     @StateObject private var taskManager = TaskManager()
-    @State private var selectedPriority: TaskItem.Priority?
-    @State private var selectedPriorityForAdd: TaskItem.Priority?
+    @State private var selectedPriority: TaskPriority?
+    @State private var selectedPriorityForAdd: TaskPriority?
     @State private var showingDetail = false
     @State private var showingAddTask = false
     @State private var isDragging = false
@@ -301,7 +303,7 @@ struct ContentView: View {
         }
     }
     
-    private func matrixQuadrant(priority: TaskItem.Priority, color: Color) -> some View {
+    private func matrixQuadrant(priority: TaskPriority, color: Color) -> some View {
         let tasks = taskManager.tasksForPriority(priority)
         
         return VStack(spacing: 6) {
@@ -429,7 +431,7 @@ struct ContentView: View {
 // MARK: - Add Task View
 struct AddTaskView: View {
     @ObservedObject var taskManager: TaskManager
-    let priority: TaskItem.Priority
+    let priority: TaskPriority
     @Environment(\.dismiss) private var dismiss
     
     @State private var title = ""
@@ -473,7 +475,7 @@ struct AddTaskView: View {
 // MARK: - Priority Detail View
 struct PriorityDetailView: View {
     @ObservedObject var taskManager: TaskManager
-    let priority: TaskItem.Priority
+    let priority: TaskPriority
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddTask = false
     
@@ -535,8 +537,10 @@ struct PriorityDetailView: View {
                         showingAddTask = true
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Edit") {
+                        // Edit functionality
+                    }
                 }
             }
         }
@@ -545,7 +549,7 @@ struct PriorityDetailView: View {
         }
     }
     
-    private func getSubtitle(for priority: TaskItem.Priority) -> String {
+    private func getSubtitle(for priority: TaskPriority) -> String {
         switch priority {
         case .urgentImportant:
             return "Do First - These require immediate attention"
@@ -644,7 +648,7 @@ struct EditTaskView: View {
     
     @State private var title: String
     @State private var description: String
-    @State private var priority: TaskItem.Priority
+    @State private var priority: TaskPriority
     
     init(taskManager: TaskManager, task: TaskItem) {
         self.taskManager = taskManager
@@ -664,7 +668,7 @@ struct EditTaskView: View {
                 
                 Section(header: Text("Priority")) {
                     Picker("Priority", selection: $priority) {
-                        ForEach(TaskItem.Priority.allCases, id: \.self) { priority in
+                        ForEach(TaskPriority.allCases, id: \.self) { priority in
                             HStack {
                                 Image(systemName: priority.icon)
                                     .foregroundColor(priority.color)
@@ -694,7 +698,7 @@ struct EditTaskView: View {
     }
 }
 
-extension TaskItem.Priority: Identifiable {
+extension TaskPriority: Identifiable {
     var id: String { rawValue }
 }
 
