@@ -156,6 +156,14 @@ class TaskManager: ObservableObject {
             tasks.insert(task, at: destIndexInMain)
         }
     }
+    
+    func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskItem.Priority) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index].title = title
+            tasks[index].description = description
+            tasks[index].priority = priority
+        }
+    }
 }
 
 // MARK: - Drop View Delegate
@@ -164,31 +172,50 @@ struct DropViewDelegate: DropDelegate {
     let targetPriority: TaskItem.Priority
     
     func performDrop(info: DropInfo) -> Bool {
-        guard let itemProvider = info.itemProviders(for: [.text]).first else { return false }
+        print("Drop attempted for \(targetPriority.rawValue)")
         
-        itemProvider.loadObject(ofClass: NSString.self) { string, _ in
+        guard let itemProvider = info.itemProviders(for: [.text]).first else { 
+            print("No item provider found")
+            return false 
+        }
+        
+        itemProvider.loadObject(ofClass: NSString.self) { string, error in
+            if let error = error {
+                print("Error loading object: \(error)")
+                return
+            }
+            
             if let taskIdString = string as? String,
                let taskId = UUID(uuidString: taskIdString) {
+                print("Task ID decoded: \(taskId)")
+                
                 DispatchQueue.main.async {
                     if let task = self.taskManager.tasks.first(where: { $0.id == taskId }) {
+                        print("Found task: \(task.title), current priority: \(task.priority.rawValue)")
+                        
                         // Only move if the priority is different
                         if task.priority != self.targetPriority {
+                            print("Moving task from \(task.priority.rawValue) to \(self.targetPriority.rawValue)")
                             self.taskManager.moveTask(task, to: self.targetPriority)
+                        } else {
+                            print("Task already in target priority")
                         }
+                    } else {
+                        print("Task not found")
                     }
                 }
+            } else {
+                print("Failed to decode task ID from: \(string ?? "nil")")
             }
         }
         return true
     }
     
     func dropEntered(info: DropInfo) {
-        // Add visual feedback when dragging over
         print("Drop entered for \(targetPriority.rawValue)")
     }
     
     func dropExited(info: DropInfo) {
-        // Remove visual feedback when dragging away
         print("Drop exited for \(targetPriority.rawValue)")
     }
     
@@ -289,12 +316,13 @@ struct ContentView: View {
                 }
                 
                 Text(priority.rawValue)
-                    .font(.caption)
+                    .font(.caption2)
                     .fontWeight(.bold)
                     .foregroundColor(color)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(2)
+                    .lineLimit(3)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .minimumScaleFactor(0.8)
             }
             
             // Task list
@@ -350,6 +378,8 @@ struct ContentView: View {
                         print("Starting drag for task: \(task.title)")
                         return NSItemProvider(object: task.id.uuidString as NSString)
                     }
+                    .scaleEffect(1.0)
+                    .animation(.easeInOut(duration: 0.2), value: true)
                 }
                 
                 if tasks.count > 5 {
@@ -560,6 +590,7 @@ struct PriorityDetailView: View {
 struct TaskRowView: View {
     let task: TaskItem
     @ObservedObject var taskManager: TaskManager
+    @State private var showingEditTask = false
     
     var body: some View {
         HStack(spacing: 12) {
@@ -585,11 +616,81 @@ struct TaskRowView: View {
             
             Spacer()
             
+            Button(action: {
+                showingEditTask = true
+            }) {
+                Image(systemName: "pencil")
+                    .foregroundColor(.blue)
+                    .font(.caption)
+            }
+            .buttonStyle(PlainButtonStyle())
+            
             Text(task.dateCreated, style: .date)
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
+        .sheet(isPresented: $showingEditTask) {
+            EditTaskView(taskManager: taskManager, task: task)
+        }
+    }
+}
+
+// MARK: - Edit Task View
+struct EditTaskView: View {
+    @ObservedObject var taskManager: TaskManager
+    let task: TaskItem
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var title: String
+    @State private var description: String
+    @State private var priority: TaskItem.Priority
+    
+    init(taskManager: TaskManager, task: TaskItem) {
+        self.taskManager = taskManager
+        self.task = task
+        self._title = State(initialValue: task.title)
+        self._description = State(initialValue: task.description)
+        self._priority = State(initialValue: task.priority)
+    }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Task Details")) {
+                    TextField("Task title", text: $title)
+                    TextField("Description", text: $description)
+                }
+                
+                Section(header: Text("Priority")) {
+                    Picker("Priority", selection: $priority) {
+                        ForEach(TaskItem.Priority.allCases, id: \.self) { priority in
+                            HStack {
+                                Image(systemName: priority.icon)
+                                    .foregroundColor(priority.color)
+                                Text(priority.rawValue)
+                                    .foregroundColor(priority.color)
+                            }
+                            .tag(priority)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+            }
+            .navigationTitle("Edit Task")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        taskManager.updateTask(task, title: title, description: description, priority: priority)
+                        dismiss()
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
+        }
     }
 }
 
