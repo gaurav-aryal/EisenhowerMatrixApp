@@ -177,7 +177,7 @@ struct ContentView: View {
                 // Task list
                 VStack(spacing: 3) {
                     let tasks = taskManager.tasksForPriority(priority)
-                    ForEach(Array(tasks.prefix(4)), id: \.id) { task in
+                    ForEach(Array(tasks.prefix(5)), id: \.id) { task in
                         HStack(spacing: 6) {
                             Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(task.isCompleted ? .green : .gray)
@@ -194,11 +194,13 @@ struct ContentView: View {
                         }
                     }
                     
-                    // Always show "More..." for all sections
-                    Text("More...")
-                        .font(.caption)
-                        .foregroundColor(color)
-                        .fontWeight(.medium)
+                    // Show "More..." only when there are more than 5 tasks
+                    if tasks.count > 5 {
+                        Text("More...")
+                            .font(.caption)
+                            .foregroundColor(color)
+                            .fontWeight(.medium)
+                    }
                 }
                 .padding(.top, 4)
                 
