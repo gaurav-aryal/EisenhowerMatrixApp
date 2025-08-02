@@ -50,17 +50,23 @@ class TaskManager: ObservableObject {
     
     func loadSampleData() {
         tasks = [
-            // Urgent & Important - 2 tasks
+            // Urgent & Important - 5 tasks
             TaskItem(title: "Deadline project", description: "Complete urgent project", priority: .urgentImportant),
             TaskItem(title: "Team meeting", description: "Prepare for meeting", priority: .urgentImportant),
+            TaskItem(title: "Client presentation", description: "Prepare slides", priority: .urgentImportant),
+            TaskItem(title: "Budget review", description: "Review quarterly budget", priority: .urgentImportant),
+            TaskItem(title: "Emergency call", description: "Handle urgent client call", priority: .urgentImportant),
             
-            // Urgent & Not Important - 2 tasks
+            // Urgent & Not Important - 3 tasks
             TaskItem(title: "Email responses", description: "Reply to emails", priority: .urgentNotImportant),
             TaskItem(title: "Phone calls", description: "Return calls", priority: .urgentNotImportant),
+            TaskItem(title: "Meeting prep", description: "Prepare for team meeting", priority: .urgentNotImportant),
             
-            // Not Urgent & Important - 2 tasks
+            // Not Urgent & Important - 4 tasks
             TaskItem(title: "Strategic planning", description: "Plan goals", priority: .notUrgentImportant),
             TaskItem(title: "Skill development", description: "Learn technology", priority: .notUrgentImportant),
+            TaskItem(title: "Network building", description: "Connect with colleagues", priority: .notUrgentImportant),
+            TaskItem(title: "Process improvement", description: "Optimize workflows", priority: .notUrgentImportant),
             
             // Not Urgent & Not Important - 2 tasks
             TaskItem(title: "Social media", description: "Check updates", priority: .notUrgentNotImportant),
@@ -91,30 +97,38 @@ struct ContentView: View {
                     Text("Eisenhower Matrix")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                    
-                    Text("2 tasks per category")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
                 }
                 .padding()
                 
                 // Matrix Grid
-                VStack(spacing: 20) {
-                    // Top row: Urgent quadrants
+                VStack(spacing: 0) {
+                    // Top section: Urgent quadrants
                     HStack(spacing: 12) {
                         matrixQuadrant(title: "Urgent & Important", subtitle: "Do First", priority: .urgentImportant, color: .red)
                         matrixQuadrant(title: "Urgent & Not Important", subtitle: "Delegate", priority: .urgentNotImportant, color: .orange)
                     }
+                    .padding(.horizontal)
+                    .padding(.top)
                     
-                    // Bottom row: Not Urgent quadrants (centered)
-                    HStack(spacing: 12) {
+                    // Center section with proper spacing
+                    Spacer()
+                        .frame(height: 80)
+                    
+                    // Bottom section: Not Urgent quadrants (truly centered)
+                    HStack {
                         Spacer()
-                        matrixQuadrant(title: "Not Urgent & Important", subtitle: "Schedule", priority: .notUrgentImportant, color: .blue)
-                        matrixQuadrant(title: "Not Urgent & Not Important", subtitle: "Eliminate", priority: .notUrgentNotImportant, color: .gray)
+                        HStack(spacing: 12) {
+                            matrixQuadrant(title: "Not Urgent & Important", subtitle: "Schedule", priority: .notUrgentImportant, color: .blue)
+                            matrixQuadrant(title: "Not Urgent & Not Important", subtitle: "Eliminate", priority: .notUrgentNotImportant, color: .gray)
+                        }
                         Spacer()
                     }
+                    .padding(.horizontal)
+                    
+                    // Bottom spacing
+                    Spacer()
+                        .frame(height: 80)
                 }
-                .padding()
                 
                 Spacer()
             }
