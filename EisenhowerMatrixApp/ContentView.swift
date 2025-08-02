@@ -45,11 +45,21 @@ struct TaskItem: Identifiable {
     }
 }
 
+// MARK: - Data Manager
 class TaskManager: ObservableObject {
     @Published var tasks: [TaskItem] = []
     
     init() {
         loadSampleData()
+    }
+    
+    func addTask(title: String, description: String, priority: TaskItem.Priority) {
+        let newTask = TaskItem(
+            title: title,
+            description: description,
+            priority: priority
+        )
+        tasks.append(newTask)
     }
     
     func loadSampleData() {
@@ -80,14 +90,18 @@ class TaskManager: ObservableObject {
         ]
     }
     
-    func tasksForPriority(_ priority: TaskItem.Priority) -> [TaskItem] {
-        return tasks.filter { $0.priority == priority }
-    }
-    
     func toggleTaskCompletion(_ task: TaskItem) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].isCompleted.toggle()
         }
+    }
+    
+    func deleteTask(_ task: TaskItem) {
+        tasks.removeAll { $0.id == task.id }
+    }
+    
+    func tasksForPriority(_ priority: TaskItem.Priority) -> [TaskItem] {
+        return tasks.filter { $0.priority == priority }
     }
 }
 
