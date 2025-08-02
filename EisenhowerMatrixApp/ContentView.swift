@@ -48,6 +48,35 @@ struct Task: Identifiable, Codable {
             }
         }
     }
+    
+    // Custom coding keys to exclude id from Codable
+    enum CodingKeys: String, CodingKey {
+        case title, description, priority, isCompleted, dateCreated
+    }
+    
+    init(title: String, description: String, priority: Priority) {
+        self.title = title
+        self.description = description
+        self.priority = priority
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decode(String.self, forKey: .description)
+        priority = try container.decode(Priority.self, forKey: .priority)
+        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
+        dateCreated = try container.decode(Date.self, forKey: .dateCreated)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(title, forKey: .title)
+        try container.encode(description, forKey: .description)
+        try container.encode(priority, forKey: .priority)
+        try container.encode(isCompleted, forKey: .isCompleted)
+        try container.encode(dateCreated, forKey: .dateCreated)
+    }
 }
 
 // MARK: - Task Manager
@@ -108,12 +137,12 @@ struct ContentView: View {
                 Spacer()
             }
             .navigationBarHidden(true)
-            .sheet(isPresented: $showingAddTask) {
-                AddTaskView(taskManager: taskManager)
-            }
-            .sheet(item: $selectedPriority) { priority in
-                PriorityDetailView(taskManager: taskManager, priority: priority)
-            }
+        }
+        .sheet(isPresented: $showingAddTask) {
+            AddTaskView(taskManager: taskManager)
+        }
+        .sheet(item: $selectedPriority) { priority in
+            PriorityDetailView(taskManager: taskManager, priority: priority)
         }
     }
     
@@ -244,7 +273,7 @@ struct ContentView: View {
 struct PriorityDetailView: View {
     @ObservedObject var taskManager: TaskManager
     let priority: Task.Priority
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
@@ -295,7 +324,7 @@ struct PriorityDetailView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
-                leading: Button("Done") { presentationMode.wrappedValue.dismiss() },
+                leading: Button("Done") { dismiss() },
                 trailing: Button("Add Task") {
                     // Add task functionality
                 }
@@ -364,7 +393,7 @@ struct TaskRowView: View {
 // MARK: - Add Task View
 struct AddTaskView: View {
     @ObservedObject var taskManager: TaskManager
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     
     @State private var title = ""
     @State private var description = ""
@@ -395,11 +424,11 @@ struct AddTaskView: View {
             .navigationTitle("Add Task")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
-                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() },
+                leading: Button("Cancel") { dismiss() },
                 trailing: Button("Save") {
                     let newTask = Task(title: title, description: description, priority: selectedPriority)
                     taskManager.addTask(newTask)
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }
                 .disabled(title.isEmpty)
             )
