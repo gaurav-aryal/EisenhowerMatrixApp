@@ -156,7 +156,10 @@ struct DropViewDelegate: DropDelegate {
                let taskId = UUID(uuidString: taskIdString) {
                 DispatchQueue.main.async {
                     if let task = self.taskManager.tasks.first(where: { $0.id == taskId }) {
-                        self.taskManager.moveTask(task, to: self.targetPriority)
+                        // Only move if the priority is different
+                        if task.priority != self.targetPriority {
+                            self.taskManager.moveTask(task, to: self.targetPriority)
+                        }
                     }
                 }
             }
@@ -165,11 +168,17 @@ struct DropViewDelegate: DropDelegate {
     }
     
     func dropEntered(info: DropInfo) {
-        // Optional: Add visual feedback when dragging over
+        // Add visual feedback when dragging over
+        print("Drop entered for \(targetPriority.rawValue)")
     }
     
     func dropExited(info: DropInfo) {
-        // Optional: Remove visual feedback when dragging away
+        // Remove visual feedback when dragging away
+        print("Drop exited for \(targetPriority.rawValue)")
+    }
+    
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
     }
 }
 
@@ -180,6 +189,8 @@ struct ContentView: View {
     @State private var selectedPriorityForAdd: TaskItem.Priority?
     @State private var showingDetail = false
     @State private var showingAddTask = false
+    @State private var isDragging = false
+    @State private var draggedTaskId: UUID?
     
     var body: some View {
         NavigationView {
@@ -318,7 +329,8 @@ struct ContentView: View {
                             .stroke(color.opacity(0.3), lineWidth: 1)
                     )
                     .onDrag {
-                        NSItemProvider(object: task.id.uuidString as NSString)
+                        print("Starting drag for task: \(task.title)")
+                        return NSItemProvider(object: task.id.uuidString as NSString)
                     }
                 }
                 
