@@ -88,19 +88,12 @@ class TaskManager: ObservableObject {
     }
     
     func addTask(title: String, description: String, priority: TaskPriority) {
-        print("Adding task: \(title) with description: \(description) to priority: \(priority.rawValue)")
         let newTask = TaskItem(
             title: title,
             description: description,
             priority: priority
         )
         tasks.append(newTask)
-        print("Total tasks now: \(tasks.count)")
-        
-        // Force UI update
-        DispatchQueue.main.async {
-            self.objectWillChange.send()
-        }
     }
     
     func loadSampleData() {
@@ -181,51 +174,32 @@ struct DropViewDelegate: DropDelegate {
     let targetPriority: TaskPriority
     
     func performDrop(info: DropInfo) -> Bool {
-        print("Drop attempted for \(targetPriority.rawValue)")
-        
+        // Simplified drop implementation to avoid Voice Shortcuts issues
         guard let itemProvider = info.itemProviders(for: [.text]).first else { 
-            print("No item provider found")
             return false 
         }
         
-        itemProvider.loadObject(ofClass: NSString.self) { (string: Any?, error: Error?) in
-            if let error = error {
-                print("Error loading object: \(error)")
-                return
-            }
-            
+        itemProvider.loadObject(ofClass: NSString.self) { string, _ in
             if let taskIdString = string as? String,
                let taskId = UUID(uuidString: taskIdString) {
-                print("Task ID decoded: \(taskId)")
-                
                 DispatchQueue.main.async {
                     if let task = self.taskManager.tasks.first(where: { $0.id == taskId }) {
-                        print("Found task: \(task.title), current priority: \(task.priority.rawValue)")
-                        
-                        // Only move if the priority is different
                         if task.priority != self.targetPriority {
-                            print("Moving task from \(task.priority.rawValue) to \(self.targetPriority.rawValue)")
                             self.taskManager.moveTask(task, to: self.targetPriority)
-                        } else {
-                            print("Task already in target priority")
                         }
-                    } else {
-                        print("Task not found")
                     }
                 }
-            } else {
-                print("Failed to decode task ID from: \(string ?? "nil")")
             }
         }
         return true
     }
     
     func dropEntered(info: DropInfo) {
-        print("Drop entered for \(targetPriority.rawValue)")
+        // Optional: Add visual feedback
     }
     
     func dropExited(info: DropInfo) {
-        print("Drop exited for \(targetPriority.rawValue)")
+        // Optional: Remove visual feedback
     }
     
     func dropUpdated(info: DropInfo) -> DropProposal? {
