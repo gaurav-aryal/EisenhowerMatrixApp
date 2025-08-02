@@ -32,10 +32,14 @@ struct TaskItem: Identifiable {
         
         var icon: String {
             switch self {
-            case .urgentImportant: return "exclamationmark.triangle.fill"
-            case .urgentNotImportant: return "clock.fill"
-            case .notUrgentImportant: return "star.fill"
-            case .notUrgentNotImportant: return "minus.circle.fill"
+            case .urgentImportant:
+                return "exclamationmark.triangle.fill"
+            case .urgentNotImportant:
+                return "clock.arrow.circlepath"
+            case .notUrgentImportant:
+                return "star.fill"
+            case .notUrgentNotImportant:
+                return "minus.circle"
             }
         }
     }
