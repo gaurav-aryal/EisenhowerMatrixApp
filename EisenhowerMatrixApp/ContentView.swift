@@ -304,6 +304,7 @@ struct PriorityDetailView: View {
     @ObservedObject var taskManager: TaskManager
     let priority: TaskItem.Priority
     @Environment(\.dismiss) private var dismiss
+    @State private var showingAddTask = false
     
     var body: some View {
         NavigationView {
@@ -357,9 +358,12 @@ struct PriorityDetailView: View {
             .navigationBarItems(
                 leading: Button("Done") { dismiss() },
                 trailing: Button("Add Task") {
-                    // Add task functionality
+                    showingAddTask = true
                 }
             )
+        }
+        .sheet(isPresented: $showingAddTask) {
+            AddTaskView(taskManager: taskManager, priority: priority)
         }
     }
     
