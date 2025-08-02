@@ -3,6 +3,7 @@
 //  EisenhowerMatrixApp
 //
 //  Created by user280681 on 8/2/25.
+//  Copyright © 2025 EisenhowerMatrixApp. All rights reserved.
 //
 
 import SwiftUI
