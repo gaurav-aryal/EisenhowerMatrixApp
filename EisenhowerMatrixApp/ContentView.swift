@@ -103,14 +103,53 @@ class TaskManager: ObservableObject {
     func tasksForPriority(_ priority: TaskItem.Priority) -> [TaskItem] {
         return tasks.filter { $0.priority == priority }
     }
+    
+    func moveTask(_ task: TaskItem, to newPriority: TaskItem.Priority) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            let movedTask = tasks.remove(at: index)
+            movedTask.priority = newPriority
+            tasks.append(movedTask)
+        }
+    }
 }
 
-// MARK: - Main Content View
+// MARK: - Drop View Delegate
+struct DropViewDelegate: DropDelegate {
+    let taskManager: TaskManager
+    let targetPriority: TaskItem.Priority
+    
+    func performDrop(info: DropInfo) -> Bool {
+        guard let itemProvider = info.itemProviders(for: [.text]).first else { return false }
+        
+        itemProvider.loadObject(ofClass: NSString.self) { string, _ in
+            if let taskIdString = string as? String,
+               let taskId = UUID(uuidString: taskIdString) {
+                DispatchQueue.main.async {
+                    if let task = self.taskManager.tasks.first(where: { $0.id == taskId }) {
+                        self.taskManager.moveTask(task, to: self.targetPriority)
+                    }
+                }
+            }
+        }
+        return true
+    }
+    
+    func dropEntered(info: DropInfo) {
+        // Optional: Add visual feedback when dragging over
+    }
+    
+    func dropExited(info: DropInfo) {
+        // Optional: Remove visual feedback when dragging away
+    }
+}
+
+// MARK: - Content View
 struct ContentView: View {
     @StateObject private var taskManager = TaskManager()
     @State private var selectedPriority: TaskItem.Priority?
+    @State private var selectedPriorityForAdd: TaskItem.Priority?
+    @State private var showingDetail = false
     @State private var showingAddTask = false
-    @State private var selectedPriorityForAdd: TaskItem.Priority = .urgentImportant
     
     var body: some View {
         NavigationView {
@@ -127,8 +166,8 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     // Top section: Urgent quadrants
                     HStack(spacing: 12) {
-                        matrixQuadrant(title: "Urgent & Important", subtitle: "Do First", priority: .urgentImportant, color: .red)
-                        matrixQuadrant(title: "Urgent & Not Important", subtitle: "Delegate", priority: .urgentNotImportant, color: .orange)
+                        matrixQuadrant(priority: .urgentImportant, color: .red)
+                        matrixQuadrant(priority: .urgentNotImportant, color: .orange)
                     }
                     .padding(.horizontal)
                     .padding(.top)
@@ -141,8 +180,8 @@ struct ContentView: View {
                     HStack {
                         Spacer()
                         HStack(spacing: 12) {
-                            matrixQuadrant(title: "Not Urgent & Important", subtitle: "Schedule", priority: .notUrgentImportant, color: .blue)
-                            matrixQuadrant(title: "Not Urgent & Not Important", subtitle: "Eliminate", priority: .notUrgentNotImportant, color: .gray)
+                            matrixQuadrant(priority: .notUrgentImportant, color: .blue)
+                            matrixQuadrant(priority: .notUrgentNotImportant, color: .gray)
                         }
                         Spacer()
                     }
@@ -160,66 +199,75 @@ struct ContentView: View {
             PriorityDetailView(taskManager: taskManager, priority: priority)
         }
         .sheet(isPresented: $showingAddTask) {
-            AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd)
+            AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
+        }
+        .sheet(isPresented: $showingDetail) {
+            if let priority = selectedPriority {
+                PriorityDetailView(taskManager: taskManager, priority: priority)
+            }
         }
     }
     
-    private func matrixQuadrant(title: String, subtitle: String, priority: TaskItem.Priority, color: Color) -> some View {
-        VStack(spacing: 8) {
-            // Header with proper alignment
+    private func matrixQuadrant(priority: TaskItem.Priority, color: Color) -> some View {
+        let tasks = taskManager.tasksForPriority(priority)
+        
+        return VStack(spacing: 8) {
             HStack {
                 Image(systemName: priority.icon)
                     .foregroundColor(color)
                     .font(.title2)
-                    .frame(width: 24, height: 24, alignment: .center)
+                
+                Text(priority.rawValue)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(color)
                 
                 Spacer()
-                
-                Text("\(taskManager.tasksForPriority(priority).count)")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(width: 22, height: 22)
-                    .background(color)
-                    .clipShape(Circle())
-            }
-            .padding(.horizontal, 4)
-            
-            // Title and subtitle
-            VStack(spacing: 3) {
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                
-                Text(subtitle)
-                    .font(.caption2)
-                    .foregroundColor(color)
-                    .lineLimit(1)
             }
             
-            // Task list
-            VStack(spacing: 3) {
-                let tasks = taskManager.tasksForPriority(priority)
-                ForEach(Array(tasks.prefix(5)), id: \.id) { task in
-                    HStack(spacing: 6) {
-                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(task.isCompleted ? .green : .gray)
-                            .font(.caption)
-                            .frame(width: 14, height: 14)
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(tasks.prefix(5)) { task in
+                    HStack {
+                        Button(action: {
+                            taskManager.toggleTask(task)
+                        }) {
+                            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(task.isCompleted ? .green : color)
+                                .font(.caption)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                         
-                        Text(task.title)
-                            .font(.caption)
-                            .lineLimit(1)
-                            .strikethrough(task.isCompleted)
-                            .foregroundColor(task.isCompleted ? .secondary : .primary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(task.title)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .strikethrough(task.isCompleted)
+                            
+                            Text(task.description)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
                         
                         Spacer()
+                        
+                        Button(action: {
+                            taskManager.deleteTask(task)
+                        }) {
+                            Text("🗑️")
+                                .font(.caption)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(6)
+                    .onDrag {
+                        NSItemProvider(object: task.id.uuidString as NSString)
                     }
                 }
                 
-                // Show "More..." only when there are more than 5 tasks
                 if tasks.count > 5 {
                     Text("More...")
                         .font(.caption)
@@ -227,7 +275,8 @@ struct ContentView: View {
                         .fontWeight(.medium)
                 }
             }
-            .padding(.top, 4)
+            
+            Spacer()
             
             // Add button
             Button(action: {
@@ -247,14 +296,19 @@ struct ContentView: View {
             
             Spacer()
         }
-        .padding(12)
+        .padding()
         .frame(width: 180, height: 220)
         .background(color.opacity(0.1))
         .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(color, lineWidth: 1)
+        )
         .onTapGesture {
             selectedPriority = priority
+            showingDetail = true
         }
+        .onDrop(of: [.text], delegate: DropViewDelegate(taskManager: taskManager, targetPriority: priority))
     }
 }
 
