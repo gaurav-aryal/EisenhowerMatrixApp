@@ -147,11 +147,12 @@ struct ContentView: View {
     private func matrixQuadrant(title: String, subtitle: String, priority: TaskItem.Priority, color: Color) -> some View {
         Button(action: { selectedPriority = priority }) {
             VStack(spacing: 8) {
-                // Header
+                // Header with proper alignment
                 HStack {
                     Image(systemName: priority.icon)
                         .foregroundColor(color)
                         .font(.title2)
+                        .frame(width: 24, height: 24, alignment: .center)
                     
                     Spacer()
                     
@@ -163,6 +164,7 @@ struct ContentView: View {
                         .background(color)
                         .clipShape(Circle())
                 }
+                .padding(.horizontal, 4)
                 
                 // Title and subtitle
                 VStack(spacing: 3) {
