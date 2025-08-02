@@ -377,11 +377,8 @@ struct ContentView: View {
                             .stroke(color.opacity(0.3), lineWidth: 1)
                     )
                     .onDrag {
-                        print("Starting drag for task: \(task.title)")
                         return NSItemProvider(object: task.id.uuidString as NSString)
                     }
-                    .scaleEffect(1.0)
-                    .animation(.easeInOut(duration: 0.2), value: true)
                 }
                 
                 if tasks.count > 5 {
