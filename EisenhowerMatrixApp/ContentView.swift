@@ -189,6 +189,19 @@ struct ContentView: View {
                     Text("Eisenhower Matrix")
                         .font(.largeTitle)
                         .fontWeight(.bold)
+                    
+                    HStack {
+                        Image(systemName: "hand.draw")
+                            .foregroundColor(.blue)
+                            .font(.caption)
+                        Text("Drag tasks between quadrants to change priority")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
                 }
                 .padding()
                 
@@ -239,19 +252,23 @@ struct ContentView: View {
         let tasks = taskManager.tasksForPriority(priority)
         
         return VStack(spacing: 8) {
+            // Header with title
             HStack {
                 Image(systemName: priority.icon)
                     .foregroundColor(color)
                     .font(.title2)
                 
                 Text(priority.rawValue)
-                    .font(.headline)
+                    .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(color)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
                 
                 Spacer()
             }
             
+            // Task list
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(tasks.prefix(5)) { task in
                     HStack {
@@ -269,6 +286,7 @@ struct ContentView: View {
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .strikethrough(task.isCompleted)
+                                .lineLimit(1)
                             
                             Text(task.description)
                                 .font(.caption2)
@@ -277,6 +295,11 @@ struct ContentView: View {
                         }
                         
                         Spacer()
+                        
+                        // Drag handle indicator
+                        Image(systemName: "line.3.horizontal")
+                            .foregroundColor(color.opacity(0.6))
+                            .font(.caption2)
                         
                         Button(action: {
                             taskManager.deleteTask(task)
@@ -290,6 +313,10 @@ struct ContentView: View {
                     .padding(.vertical, 4)
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(color.opacity(0.3), lineWidth: 1)
+                    )
                     .onDrag {
                         NSItemProvider(object: task.id.uuidString as NSString)
                     }
@@ -336,6 +363,12 @@ struct ContentView: View {
             showingDetail = true
         }
         .onDrop(of: [.text], delegate: DropViewDelegate(taskManager: taskManager, targetPriority: priority))
+        .overlay(
+            // Drop zone indicator
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(color.opacity(0.5), lineWidth: 2)
+                .opacity(0.3)
+        )
     }
 }
 
