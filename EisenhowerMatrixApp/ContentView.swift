@@ -99,33 +99,22 @@ struct ContentView: View {
                 .padding()
                 
                 // Matrix Grid
-                VStack(spacing: 0) {
-                    // Top section: Urgent quadrants
+                VStack(spacing: 20) {
+                    // Top row: Urgent quadrants
                     HStack(spacing: 12) {
                         matrixQuadrant(title: "Urgent & Important", subtitle: "Do First", priority: .urgentImportant, color: .red)
                         matrixQuadrant(title: "Urgent & Not Important", subtitle: "Delegate", priority: .urgentNotImportant, color: .orange)
                     }
-                    .padding(.horizontal)
-                    .padding(.top)
                     
-                    // Large spacer to push bottom quadrants to center
-                    Spacer()
-                        .frame(height: 100)
-                    
-                    // Bottom section: Not Urgent quadrants (truly centered)
+                    // Bottom row: Not Urgent quadrants (centered)
                     HStack(spacing: 12) {
                         Spacer()
                         matrixQuadrant(title: "Not Urgent & Important", subtitle: "Schedule", priority: .notUrgentImportant, color: .blue)
                         matrixQuadrant(title: "Not Urgent & Not Important", subtitle: "Eliminate", priority: .notUrgentNotImportant, color: .gray)
                         Spacer()
                     }
-                    .padding(.horizontal)
-                    
-                    // Bottom spacer for balance
-                    Spacer()
-                        .frame(height: 100)
                 }
-                .frame(height: 300)
+                .padding()
                 
                 Spacer()
             }
@@ -168,7 +157,7 @@ struct ContentView: View {
                 Spacer()
             }
             .padding(12)
-            .frame(width: 150, height: 120)
+            .frame(height: 120)
             .background(color.opacity(0.1))
             .cornerRadius(12)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
