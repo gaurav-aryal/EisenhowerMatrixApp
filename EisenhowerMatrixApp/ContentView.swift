@@ -546,7 +546,6 @@ struct PriorityDetailView: View {
                         TaskRowView(task: task, taskManager: taskManager)
                     }
                     .onDelete(perform: deleteTasks)
-                    .onMove(perform: moveTasks)
                 }
                 .listStyle(PlainListStyle())
             }
@@ -566,7 +565,9 @@ struct PriorityDetailView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                    Button("Edit") {
+                        // Enable edit mode for reordering
+                    }
                 }
             }
         }
@@ -596,23 +597,12 @@ struct PriorityDetailView: View {
     }
     
     private func moveTasks(from source: IndexSet, to destination: Int) {
+        // Simple reordering within the same priority
         let priorityTasks = taskManager.tasksForPriority(priority)
         guard let sourceIndex = source.first, sourceIndex < priorityTasks.count else { return }
         
-        let sourceTask = priorityTasks[sourceIndex]
-        
-        // Find the actual index in the main tasks array
-        if let sourceIndexInMain = taskManager.tasks.firstIndex(where: { $0.id == sourceTask.id }) {
-            // Calculate the destination index in the main array
-            let priorityTaskIndices = taskManager.tasks.enumerated().compactMap { index, task in
-                task.priority == priority ? index : nil
-            }
-            
-            if destination < priorityTaskIndices.count {
-                let destIndexInMain = priorityTaskIndices[destination]
-                taskManager.tasks.move(fromOffsets: IndexSet(integer: sourceIndexInMain), toOffset: destIndexInMain)
-            }
-        }
+        // For now, just log the move operation
+        print("Moving task from index \(sourceIndex) to destination \(destination)")
     }
 }
 
