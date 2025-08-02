@@ -141,6 +141,21 @@ class TaskManager: ObservableObject {
             tasks[index].priority = newPriority
         }
     }
+    
+    func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskItem.Priority) {
+        let priorityTasks = tasksForPriority(priority)
+        guard sourceIndex < priorityTasks.count && destinationIndex < priorityTasks.count else { return }
+        
+        let sourceTask = priorityTasks[sourceIndex]
+        let destinationTask = priorityTasks[destinationIndex]
+        
+        // Find the actual indices in the main tasks array
+        if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
+           let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
+            let task = tasks.remove(at: sourceIndexInMain)
+            tasks.insert(task, at: destIndexInMain)
+        }
+    }
 }
 
 // MARK: - Drop View Delegate
@@ -262,27 +277,30 @@ struct ContentView: View {
     private func matrixQuadrant(priority: TaskItem.Priority, color: Color) -> some View {
         let tasks = taskManager.tasksForPriority(priority)
         
-        return VStack(spacing: 8) {
-            // Header with title
-            HStack {
-                Image(systemName: priority.icon)
-                    .foregroundColor(color)
-                    .font(.title2)
+        return VStack(spacing: 6) {
+            // Header with title - fixed layout
+            VStack(spacing: 4) {
+                HStack {
+                    Image(systemName: priority.icon)
+                        .foregroundColor(color)
+                        .font(.title3)
+                    
+                    Spacer()
+                }
                 
                 Text(priority.rawValue)
                     .font(.caption)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .foregroundColor(color)
-                    .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                
-                Spacer()
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             
             // Task list
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 ForEach(tasks.prefix(5)) { task in
-                    HStack {
+                    HStack(spacing: 6) {
                         Button(action: {
                             taskManager.toggleTask(task)
                         }) {
@@ -292,7 +310,7 @@ struct ContentView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                         
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 1) {
                             Text(task.title)
                                 .font(.caption)
                                 .fontWeight(.medium)
@@ -320,12 +338,12 @@ struct ContentView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
                     .background(Color.gray.opacity(0.1))
-                    .cornerRadius(6)
+                    .cornerRadius(4)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: 4)
                             .stroke(color.opacity(0.3), lineWidth: 1)
                     )
                     .onDrag {
@@ -362,7 +380,7 @@ struct ContentView: View {
             
             Spacer()
         }
-        .padding()
+        .padding(8)
         .frame(width: 180, height: 220)
         .background(color.opacity(0.1))
         .cornerRadius(12)
@@ -375,12 +393,6 @@ struct ContentView: View {
             showingDetail = true
         }
         .onDrop(of: [.text], delegate: DropViewDelegate(taskManager: taskManager, targetPriority: priority))
-        .overlay(
-            // Drop zone indicator
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(color.opacity(0.5), lineWidth: 2)
-                .opacity(0.3)
-        )
     }
 }
 
@@ -479,6 +491,7 @@ struct PriorityDetailView: View {
                         TaskRowView(task: task, taskManager: taskManager)
                     }
                     .onDelete(perform: deleteTasks)
+                    .onMove(perform: moveTasks)
                 }
                 .listStyle(PlainListStyle())
             }
@@ -491,6 +504,9 @@ struct PriorityDetailView: View {
                     Button("Add Task") {
                         showingAddTask = true
                     }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
                 }
             }
         }
@@ -516,6 +532,26 @@ struct PriorityDetailView: View {
         let tasksToDelete = taskManager.tasksForPriority(priority)
         for index in offsets {
             taskManager.deleteTask(tasksToDelete[index])
+        }
+    }
+    
+    private func moveTasks(from source: IndexSet, to destination: Int) {
+        let priorityTasks = taskManager.tasksForPriority(priority)
+        guard let sourceIndex = source.first, sourceIndex < priorityTasks.count else { return }
+        
+        let sourceTask = priorityTasks[sourceIndex]
+        
+        // Find the actual index in the main tasks array
+        if let sourceIndexInMain = taskManager.tasks.firstIndex(where: { $0.id == sourceTask.id }) {
+            // Calculate the destination index in the main array
+            let priorityTaskIndices = taskManager.tasks.enumerated().compactMap { index, task in
+                task.priority == priority ? index : nil
+            }
+            
+            if destination < priorityTaskIndices.count {
+                let destIndexInMain = priorityTaskIndices[destination]
+                taskManager.tasks.move(fromOffsets: IndexSet(integer: sourceIndexInMain), toOffset: destIndexInMain)
+            }
         }
     }
 }
