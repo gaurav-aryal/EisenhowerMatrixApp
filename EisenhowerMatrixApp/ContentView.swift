@@ -376,9 +376,7 @@ struct ContentView: View {
                         RoundedRectangle(cornerRadius: 4)
                             .stroke(color.opacity(0.3), lineWidth: 1)
                     )
-                    .onDrag {
-                        return NSItemProvider(object: task.id.uuidString as NSString)
-                    }
+                    // Drag functionality temporarily disabled
                 }
                 
                 if tasks.count > 5 {
@@ -417,7 +415,7 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(color, lineWidth: 1)
         )
-        .onDrop(of: [.text], delegate: DropViewDelegate(taskManager: taskManager, targetPriority: priority))
+        // Drop functionality temporarily disabled
     }
 }
 
@@ -455,7 +453,6 @@ struct AddTaskView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        print("Save button pressed with title: '\(title)' and description: '\(description)'")
                         taskManager.addTask(title: title, description: description, priority: priority)
                         dismiss()
                     }
@@ -535,7 +532,7 @@ struct PriorityDetailView: View {
                         showingAddTask = true
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Edit") {
                         // Enable edit mode for reordering
                     }
@@ -803,7 +800,6 @@ struct TaskDetailView: View {
                 Spacer()
             }
             .navigationTitle("Task Details")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
