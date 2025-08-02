@@ -50,25 +50,27 @@ class TaskManager: ObservableObject {
     
     func loadSampleData() {
         tasks = [
-            // Urgent & Important - 5 tasks
+            // Urgent & Important - 7 tasks (will show 5 + "More...")
             TaskItem(title: "Deadline project", description: "Complete urgent project", priority: .urgentImportant),
             TaskItem(title: "Team meeting", description: "Prepare for meeting", priority: .urgentImportant),
             TaskItem(title: "Client presentation", description: "Prepare slides", priority: .urgentImportant),
             TaskItem(title: "Budget review", description: "Review quarterly budget", priority: .urgentImportant),
             TaskItem(title: "Emergency call", description: "Handle urgent client call", priority: .urgentImportant),
+            TaskItem(title: "Project deadline", description: "Finalize project deliverables", priority: .urgentImportant),
+            TaskItem(title: "Critical bug fix", description: "Fix production bug", priority: .urgentImportant),
             
-            // Urgent & Not Important - 3 tasks
+            // Urgent & Not Important - 3 tasks (will show all 3)
             TaskItem(title: "Email responses", description: "Reply to emails", priority: .urgentNotImportant),
             TaskItem(title: "Phone calls", description: "Return calls", priority: .urgentNotImportant),
             TaskItem(title: "Meeting prep", description: "Prepare for team meeting", priority: .urgentNotImportant),
             
-            // Not Urgent & Important - 4 tasks
+            // Not Urgent & Important - 4 tasks (will show all 4)
             TaskItem(title: "Strategic planning", description: "Plan goals", priority: .notUrgentImportant),
             TaskItem(title: "Skill development", description: "Learn technology", priority: .notUrgentImportant),
             TaskItem(title: "Network building", description: "Connect with colleagues", priority: .notUrgentImportant),
             TaskItem(title: "Process improvement", description: "Optimize workflows", priority: .notUrgentImportant),
             
-            // Not Urgent & Not Important - 2 tasks
+            // Not Urgent & Not Important - 2 tasks (will show all 2)
             TaskItem(title: "Social media", description: "Check updates", priority: .notUrgentNotImportant),
             TaskItem(title: "Some interruptions", description: "Handle distractions", priority: .notUrgentNotImportant)
         ]
@@ -168,10 +170,38 @@ struct ContentView: View {
                         .foregroundColor(color)
                 }
                 
+                // Task list
+                VStack(spacing: 2) {
+                    let tasks = taskManager.tasksForPriority(priority)
+                    ForEach(Array(tasks.prefix(5)), id: \.id) { task in
+                        HStack {
+                            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(task.isCompleted ? .green : .gray)
+                                .font(.caption2)
+                            
+                            Text(task.title)
+                                .font(.caption2)
+                                .lineLimit(1)
+                                .strikethrough(task.isCompleted)
+                                .foregroundColor(task.isCompleted ? .secondary : .primary)
+                            
+                            Spacer()
+                        }
+                    }
+                    
+                    if tasks.count > 5 {
+                        Text("More...")
+                            .font(.caption2)
+                            .foregroundColor(color)
+                            .fontWeight(.medium)
+                    }
+                }
+                .padding(.top, 4)
+                
                 Spacer()
             }
             .padding(12)
-            .frame(height: 120)
+            .frame(height: 160)
             .background(color.opacity(0.1))
             .cornerRadius(12)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
