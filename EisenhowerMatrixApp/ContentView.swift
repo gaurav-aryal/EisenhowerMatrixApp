@@ -87,12 +87,14 @@ class TaskManager: ObservableObject {
     }
     
     func addTask(title: String, description: String, priority: TaskPriority) {
+        print("Adding task: \(title) with description: \(description) to priority: \(priority.rawValue)")
         let newTask = TaskItem(
             title: title,
             description: description,
             priority: priority
         )
         tasks.append(newTask)
+        print("Total tasks now: \(tasks.count)")
     }
     
     func loadSampleData() {
@@ -476,6 +478,7 @@ struct AddTaskView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        print("Save button pressed with title: '\(title)' and description: '\(description)'")
                         taskManager.addTask(title: title, description: description, priority: priority)
                         dismiss()
                     }
