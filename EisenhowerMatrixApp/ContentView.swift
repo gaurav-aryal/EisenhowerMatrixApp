@@ -230,8 +230,10 @@ struct ContentView: View {
     @StateObject private var taskManager = TaskManager()
     @State private var selectedPriority: TaskPriority?
     @State private var selectedPriorityForAdd: TaskPriority?
+    @State private var selectedTask: TaskItem?
     @State private var showingDetail = false
     @State private var showingAddTask = false
+    @State private var showingTaskDetail = false
     @State private var isDragging = false
     @State private var draggedTaskId: UUID?
     
@@ -300,33 +302,42 @@ struct ContentView: View {
                 PriorityDetailView(taskManager: taskManager, priority: priority)
             }
         }
+        .sheet(isPresented: $showingTaskDetail) {
+            if let task = selectedTask {
+                TaskDetailView(task: task, taskManager: taskManager)
+            }
+        }
     }
     
     private func matrixQuadrant(priority: TaskPriority, color: Color) -> some View {
         let tasks = taskManager.tasksForPriority(priority)
         
         return VStack(spacing: 6) {
-            // Header with title - fixed layout
+            // Header with title - clickable to open full list
             VStack(spacing: 4) {
                 HStack {
                     Image(systemName: priority.icon)
                         .foregroundColor(color)
                         .font(.title3)
                     
+                    Text(priority.rawValue)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(color)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .minimumScaleFactor(0.8)
+                        .onTapGesture {
+                            selectedPriority = priority
+                            showingDetail = true
+                        }
+                    
                     Spacer()
                 }
-                
-                Text(priority.rawValue)
-                    .font(.caption2)
-                    .fontWeight(.bold)
-                    .foregroundColor(color)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .minimumScaleFactor(0.8)
             }
             
-            // Task list
+            // Task list - individual tasks clickable
             VStack(alignment: .leading, spacing: 3) {
                 ForEach(tasks.prefix(5)) { task in
                     HStack(spacing: 6) {
@@ -345,11 +356,19 @@ struct ContentView: View {
                                 .fontWeight(.medium)
                                 .strikethrough(task.isCompleted)
                                 .lineLimit(1)
+                                .onTapGesture {
+                                    selectedTask = task
+                                    showingTaskDetail = true
+                                }
                             
                             Text(task.description)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
+                                .onTapGesture {
+                                    selectedTask = task
+                                    showingTaskDetail = true
+                                }
                         }
                         
                         Spacer()
@@ -419,10 +438,6 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(color, lineWidth: 1)
         )
-        .onTapGesture {
-            selectedPriority = priority
-            showingDetail = true
-        }
         .onDrop(of: [.text], delegate: DropViewDelegate(taskManager: taskManager, targetPriority: priority))
     }
 }
@@ -537,9 +552,12 @@ struct PriorityDetailView: View {
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Edit") {
-                        // Edit functionality
+                    Button("Add Task") {
+                        showingAddTask = true
                     }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
                 }
             }
         }
@@ -594,6 +612,16 @@ struct TaskRowView: View {
     let task: TaskItem
     @ObservedObject var taskManager: TaskManager
     @State private var showingEditTask = false
+    @State private var isEditing = false
+    @State private var editedTitle: String
+    @State private var editedDescription: String
+    
+    init(task: TaskItem, taskManager: TaskManager) {
+        self.task = task
+        self.taskManager = taskManager
+        self._editedTitle = State(initialValue: task.title)
+        self._editedDescription = State(initialValue: task.description)
+    }
     
     var body: some View {
         HStack(spacing: 12) {
@@ -605,16 +633,40 @@ struct TaskRowView: View {
             .buttonStyle(PlainButtonStyle())
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(task.title)
-                    .font(.body)
-                    .fontWeight(.medium)
-                    .strikethrough(task.isCompleted)
-                    .foregroundColor(task.isCompleted ? .secondary : .primary)
-                
-                Text(task.description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .strikethrough(task.isCompleted)
+                if isEditing {
+                    TextField("Task title", text: $editedTitle)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .onSubmit {
+                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority)
+                            isEditing = false
+                        }
+                    
+                    TextField("Description", text: $editedDescription)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .onSubmit {
+                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority)
+                            isEditing = false
+                        }
+                } else {
+                    Text(task.title)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .strikethrough(task.isCompleted)
+                        .foregroundColor(task.isCompleted ? .secondary : .primary)
+                        .onTapGesture {
+                            isEditing = true
+                        }
+                    
+                    Text(task.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .strikethrough(task.isCompleted)
+                        .onTapGesture {
+                            isEditing = true
+                        }
+                }
             }
             
             Spacer()
@@ -693,6 +745,121 @@ struct EditTaskView: View {
                     .disabled(title.isEmpty)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Task Detail View
+struct TaskDetailView: View {
+    let task: TaskItem
+    @ObservedObject var taskManager: TaskManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingEditTask = false
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // Task Header
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: task.priority.icon)
+                            .font(.title)
+                            .foregroundColor(task.priority.color)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(task.priority.rawValue)
+                                .font(.headline)
+                                .foregroundColor(task.priority.color)
+                            
+                            Text(getSubtitle(for: task.priority))
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                    }
+                    
+                    HStack {
+                        Text("Created: \(task.dateCreated, style: .date)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            taskManager.toggleTask(task)
+                        }) {
+                            HStack {
+                                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(task.isCompleted ? .green : .gray)
+                                Text(task.isCompleted ? "Completed" : "Mark Complete")
+                                    .font(.caption)
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding()
+                .background(task.priority.color.opacity(0.1))
+                .cornerRadius(12)
+                
+                // Task Content
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Title")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text(task.title)
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .strikethrough(task.isCompleted)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Description")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text(task.description)
+                            .font(.body)
+                            .strikethrough(task.isCompleted)
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
+                
+                Spacer()
+            }
+            .navigationTitle("Task Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Edit") {
+                        showingEditTask = true
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingEditTask) {
+            EditTaskView(taskManager: taskManager, task: task)
+        }
+    }
+    
+    private func getSubtitle(for priority: TaskPriority) -> String {
+        switch priority {
+        case .urgentImportant:
+            return "Do First - These require immediate attention"
+        case .urgentNotImportant:
+            return "Delegate - These can be delegated to others"
+        case .notUrgentImportant:
+            return "Schedule - Plan these for later"
+        case .notUrgentNotImportant:
+            return "Eliminate - Consider removing these tasks"
         }
     }
 }
