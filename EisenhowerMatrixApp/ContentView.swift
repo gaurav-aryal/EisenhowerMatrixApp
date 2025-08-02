@@ -168,44 +168,10 @@ class TaskManager: ObservableObject {
     }
 }
 
-// MARK: - Drop View Delegate
-struct DropViewDelegate: DropDelegate {
-    let taskManager: TaskManager
-    let targetPriority: TaskPriority
-    
-    func performDrop(info: DropInfo) -> Bool {
-        // Simplified drop implementation to avoid Voice Shortcuts issues
-        guard let itemProvider = info.itemProviders(for: [.text]).first else { 
-            return false 
-        }
-        
-        itemProvider.loadObject(ofClass: NSString.self) { string, _ in
-            if let taskIdString = string as? String,
-               let taskId = UUID(uuidString: taskIdString) {
-                DispatchQueue.main.async {
-                    if let task = self.taskManager.tasks.first(where: { $0.id == taskId }) {
-                        if task.priority != self.targetPriority {
-                            self.taskManager.moveTask(task, to: self.targetPriority)
-                        }
-                    }
-                }
-            }
-        }
-        return true
-    }
-    
-    func dropEntered(info: DropInfo) {
-        // Optional: Add visual feedback
-    }
-    
-    func dropExited(info: DropInfo) {
-        // Optional: Remove visual feedback
-    }
-    
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        return DropProposal(operation: .move)
-    }
-}
+// MARK: - Drop View Delegate (Temporarily Disabled)
+// struct DropViewDelegate: DropDelegate {
+//     // Drag and drop functionality temporarily disabled to avoid Voice Shortcuts issues
+// }
 
 // MARK: - Content View
 struct ContentView: View {
@@ -527,12 +493,7 @@ struct PriorityDetailView: View {
                         showingAddTask = true
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Add Task") {
-                        showingAddTask = true
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Edit") {
                         // Enable edit mode for reordering
                     }
