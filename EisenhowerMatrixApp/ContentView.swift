@@ -55,12 +55,12 @@ enum TaskPriority: String, CaseIterable, Codable {
     case notUrgentImportant = "Not Urgent & Important"
     case notUrgentNotImportant = "Not Urgent & Not Important"
     
-    var color: Color {
+    var color: SwiftUI.Color {
         switch self {
-        case .urgentImportant: return .red
-        case .urgentNotImportant: return .orange
-        case .notUrgentImportant: return .blue
-        case .notUrgentNotImportant: return .gray
+        case .urgentImportant: return SwiftUI.Color.red
+        case .urgentNotImportant: return SwiftUI.Color.orange
+        case .notUrgentImportant: return SwiftUI.Color.blue
+        case .notUrgentNotImportant: return SwiftUI.Color.gray
         }
     }
     
