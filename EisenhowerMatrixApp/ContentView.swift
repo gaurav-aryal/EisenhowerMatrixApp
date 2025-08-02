@@ -35,11 +35,11 @@ struct TaskItem: Identifiable {
             case .urgentImportant:
                 return "exclamationmark.triangle.fill"
             case .urgentNotImportant:
-                return "clock.arrow.circlepath"
+                return "clock"
             case .notUrgentImportant:
                 return "star.fill"
             case .notUrgentNotImportant:
-                return "minus.circle"
+                return "minus"
             }
         }
     }
