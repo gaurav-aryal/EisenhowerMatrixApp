@@ -224,9 +224,6 @@ struct ContentView: View {
                 Spacer()
             }
         }
-        .sheet(item: $selectedPriority) { priority in
-            PriorityDetailView(taskManager: taskManager, priority: priority)
-        }
         .sheet(isPresented: $showingAddTask) {
             AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
         }
@@ -370,10 +367,10 @@ struct AddTaskView: View {
             }
             .navigationTitle("Add Task")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         taskManager.addTask(title: title, description: description, priority: priority)
                         dismiss()
@@ -441,10 +438,10 @@ struct PriorityDetailView: View {
             }
             .navigationTitle(priority.rawValue)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Add Task") {
                         showingAddTask = true
                     }
@@ -484,7 +481,7 @@ struct TaskRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            Button(action: { taskManager.toggleTaskCompletion(task) }) {
+            Button(action: { taskManager.toggleTask(task) }) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(task.isCompleted ? .green : .gray)
                     .font(.title3)
