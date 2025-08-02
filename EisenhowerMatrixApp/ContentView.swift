@@ -180,7 +180,7 @@ struct DropViewDelegate: DropDelegate {
             return false 
         }
         
-        itemProvider.loadObject(ofClass: NSString.self) { string, error in
+        itemProvider.loadObject(ofClass: NSString.self) { (string: Any?, error: Error?) in
             if let error = error {
                 print("Error loading object: \(error)")
                 return
