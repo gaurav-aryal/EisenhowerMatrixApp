@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TaskItem: Identifiable {
+struct TaskItem: Identifiable, Codable {
     let id = UUID()
     var title: String
     var description: String
@@ -15,7 +15,38 @@ struct TaskItem: Identifiable {
     var isCompleted: Bool = false
     var dateCreated: Date = Date()
     
-    enum Priority: String, CaseIterable {
+    // Custom coding keys to handle UUID
+    private enum CodingKeys: String, CodingKey {
+        case id, title, description, priority, isCompleted, dateCreated
+    }
+    
+    init(title: String, description: String, priority: Priority) {
+        self.title = title
+        self.description = description
+        self.priority = priority
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decode(String.self, forKey: .description)
+        priority = try container.decode(Priority.self, forKey: .priority)
+        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
+        dateCreated = try container.decode(Date.self, forKey: .dateCreated)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(description, forKey: .description)
+        try container.encode(priority, forKey: .priority)
+        try container.encode(isCompleted, forKey: .isCompleted)
+        try container.encode(dateCreated, forKey: .dateCreated)
+    }
+    
+    enum Priority: String, CaseIterable, Codable {
         case urgentImportant = "Urgent & Important"
         case urgentNotImportant = "Urgent & Not Important"
         case notUrgentImportant = "Not Urgent & Important"
@@ -90,7 +121,7 @@ class TaskManager: ObservableObject {
         ]
     }
     
-    func toggleTaskCompletion(_ task: TaskItem) {
+    func toggleTask(_ task: TaskItem) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].isCompleted.toggle()
         }
@@ -106,9 +137,7 @@ class TaskManager: ObservableObject {
     
     func moveTask(_ task: TaskItem, to newPriority: TaskItem.Priority) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            let movedTask = tasks.remove(at: index)
-            movedTask.priority = newPriority
-            tasks.append(movedTask)
+            tasks[index].priority = newPriority
         }
     }
 }
@@ -340,15 +369,18 @@ struct AddTaskView: View {
                 }
             }
             .navigationTitle("Add Task")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Cancel") { dismiss() },
-                trailing: Button("Save") {
-                    taskManager.addTask(title: title, description: description, priority: priority)
-                    dismiss()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
                 }
-                .disabled(title.isEmpty)
-            )
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        taskManager.addTask(title: title, description: description, priority: priority)
+                        dismiss()
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
         }
     }
 }
@@ -408,13 +440,16 @@ struct PriorityDetailView: View {
                 .listStyle(PlainListStyle())
             }
             .navigationTitle(priority.rawValue)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Done") { dismiss() },
-                trailing: Button("Add Task") {
-                    showingAddTask = true
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") { dismiss() }
                 }
-            )
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Task") {
+                        showingAddTask = true
+                    }
+                }
+            }
         }
         .sheet(isPresented: $showingAddTask) {
             AddTaskView(taskManager: taskManager, priority: priority)
