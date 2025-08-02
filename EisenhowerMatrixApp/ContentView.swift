@@ -118,7 +118,7 @@ struct ContentView: View {
                     
                     // Center section with proper spacing
                     Spacer()
-                        .frame(height: 80)
+                        .frame(height: 120)
                     
                     // Bottom section: Not Urgent quadrants (truly centered)
                     HStack {
@@ -133,7 +133,7 @@ struct ContentView: View {
                     
                     // Bottom spacing
                     Spacer()
-                        .frame(height: 80)
+                        .frame(height: 120)
                 }
                 
                 Spacer()
@@ -213,7 +213,7 @@ struct ContentView: View {
                 Spacer()
             }
             .padding(12)
-            .frame(width: 160, height: 180)
+            .frame(width: 180, height: 220)
             .background(color.opacity(0.1))
             .cornerRadius(12)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
