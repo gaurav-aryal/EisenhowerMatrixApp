@@ -100,14 +100,18 @@ struct ContentView: View {
                 
                 // Matrix Grid
                 VStack(spacing: 12) {
+                    // Top row: Urgent quadrants
                     HStack(spacing: 12) {
                         matrixQuadrant(title: "Urgent & Important", subtitle: "Do First", priority: .urgentImportant, color: .red)
                         matrixQuadrant(title: "Urgent & Not Important", subtitle: "Delegate", priority: .urgentNotImportant, color: .orange)
                     }
                     
+                    // Bottom row: Not Urgent quadrants (centered)
                     HStack(spacing: 12) {
+                        Spacer()
                         matrixQuadrant(title: "Not Urgent & Important", subtitle: "Schedule", priority: .notUrgentImportant, color: .blue)
                         matrixQuadrant(title: "Not Urgent & Not Important", subtitle: "Eliminate", priority: .notUrgentNotImportant, color: .gray)
+                        Spacer()
                     }
                 }
                 .padding()
