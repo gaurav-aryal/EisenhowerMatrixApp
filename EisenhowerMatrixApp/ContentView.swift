@@ -107,14 +107,21 @@ class TaskManager: ObservableObject {
     
     private func loadSampleData() {
         tasks = [
-            Task(title: "Deadline project", description: "Complete the urgent project", priority: .urgentImportant),
-            Task(title: "Team meeting", description: "Prepare for tomorrow's meeting", priority: .urgentImportant),
-            Task(title: "Email responses", description: "Reply to urgent emails", priority: .urgentNotImportant),
-            Task(title: "Phone calls", description: "Return urgent calls", priority: .urgentNotImportant),
-            Task(title: "Strategic planning", description: "Plan next quarter goals", priority: .notUrgentImportant),
-            Task(title: "Skill development", description: "Learn new technology", priority: .notUrgentImportant),
-            Task(title: "Social media", description: "Check social media", priority: .notUrgentNotImportant),
-            Task(title: "Some interruptions", description: "Handle minor interruptions", priority: .notUrgentNotImportant)
+            // Urgent & Important - 2 tasks
+            Task(title: "Deadline project", description: "Complete the urgent project by end of week", priority: .urgentImportant),
+            Task(title: "Team meeting", description: "Prepare for tomorrow's critical meeting", priority: .urgentImportant),
+            
+            // Urgent & Not Important - 2 tasks
+            Task(title: "Email responses", description: "Reply to urgent emails from clients", priority: .urgentNotImportant),
+            Task(title: "Phone calls", description: "Return urgent calls from suppliers", priority: .urgentNotImportant),
+            
+            // Not Urgent & Important - 2 tasks
+            Task(title: "Strategic planning", description: "Plan next quarter goals and objectives", priority: .notUrgentImportant),
+            Task(title: "Skill development", description: "Learn new technology for future projects", priority: .notUrgentImportant),
+            
+            // Not Urgent & Not Important - 2 tasks
+            Task(title: "Social media", description: "Check social media updates", priority: .notUrgentNotImportant),
+            Task(title: "Some interruptions", description: "Handle minor interruptions and distractions", priority: .notUrgentNotImportant)
         ]
     }
 }
@@ -136,7 +143,15 @@ struct ContentView: View {
                 
                 Spacer()
             }
-            .navigationBarHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingAddTask = true }) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
         }
         .sheet(isPresented: $showingAddTask) {
             AddTaskView(taskManager: taskManager)
@@ -168,7 +183,7 @@ struct ContentView: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color(uiColor: .systemBackground))
     }
     
     private var matrixGridView: some View {
@@ -322,13 +337,18 @@ struct PriorityDetailView: View {
                 }
                 .listStyle(PlainListStyle())
             }
+            .navigationTitle(priority.rawValue)
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Done") { dismiss() },
-                trailing: Button("Add Task") {
-                    // Add task functionality
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") { dismiss() }
                 }
-            )
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Task") {
+                        // Add task functionality
+                    }
+                }
+            }
         }
     }
     
@@ -423,15 +443,19 @@ struct AddTaskView: View {
             }
             .navigationTitle("Add Task")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Cancel") { dismiss() },
-                trailing: Button("Save") {
-                    let newTask = Task(title: title, description: description, priority: selectedPriority)
-                    taskManager.addTask(newTask)
-                    dismiss()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
                 }
-                .disabled(title.isEmpty)
-            )
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        let newTask = Task(title: title, description: description, priority: selectedPriority)
+                        taskManager.addTask(newTask)
+                        dismiss()
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
         }
     }
 }
