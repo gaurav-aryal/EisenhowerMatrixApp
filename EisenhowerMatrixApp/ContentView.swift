@@ -194,12 +194,11 @@ struct ContentView: View {
                         }
                     }
                     
-                    if tasks.count > 4 {
-                        Text("More...")
-                            .font(.caption)
-                            .foregroundColor(color)
-                            .fontWeight(.medium)
-                    }
+                    // Always show "More..." for all sections
+                    Text("More...")
+                        .font(.caption)
+                        .foregroundColor(color)
+                        .fontWeight(.medium)
                 }
                 .padding(.top, 4)
                 
