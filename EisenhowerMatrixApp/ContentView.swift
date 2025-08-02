@@ -108,6 +108,8 @@ class TaskManager: ObservableObject {
 struct ContentView: View {
     @StateObject private var taskManager = TaskManager()
     @State private var selectedPriority: TaskItem.Priority?
+    @State private var showingAddTask = false
+    @State private var selectedPriorityForAdd: TaskItem.Priority = .urgentImportant
     
     var body: some View {
         NavigationView {
@@ -155,6 +157,9 @@ struct ContentView: View {
         }
         .sheet(item: $selectedPriority) { priority in
             PriorityDetailView(taskManager: taskManager, priority: priority)
+        }
+        .sheet(isPresented: $showingAddTask) {
+            AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd)
         }
     }
     
