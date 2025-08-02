@@ -8,19 +8,15 @@
 import SwiftUI
 
 struct TaskItem: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     var title: String
     var description: String
     var priority: Priority
     var isCompleted: Bool = false
     var dateCreated: Date = Date()
     
-    // Custom coding keys to handle UUID
-    private enum CodingKeys: String, CodingKey {
-        case id, title, description, priority, isCompleted, dateCreated
-    }
-    
     init(title: String, description: String, priority: Priority) {
+        self.id = UUID()
         self.title = title
         self.description = description
         self.priority = priority
@@ -28,12 +24,12 @@ struct TaskItem: Identifiable, Codable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        title = try container.decode(String.self, forKey: .title)
-        description = try container.decode(String.self, forKey: .description)
-        priority = try container.decode(Priority.self, forKey: .priority)
-        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
-        dateCreated = try container.decode(Date.self, forKey: .dateCreated)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.description = try container.decode(String.self, forKey: .description)
+        self.priority = try container.decode(Priority.self, forKey: .priority)
+        self.isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
+        self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -44,6 +40,11 @@ struct TaskItem: Identifiable, Codable {
         try container.encode(priority, forKey: .priority)
         try container.encode(isCompleted, forKey: .isCompleted)
         try container.encode(dateCreated, forKey: .dateCreated)
+    }
+    
+    // Custom coding keys to handle UUID
+    private enum CodingKeys: String, CodingKey {
+        case id, title, description, priority, isCompleted, dateCreated
     }
     
     enum Priority: String, CaseIterable, Codable {
