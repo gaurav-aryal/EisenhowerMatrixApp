@@ -229,7 +229,7 @@ struct ContentView: View {
             }
         }
         .padding()
-        .background(Color(uiColor: .systemBackground))
+        .background(Color.white)
     }
     
     private var matrixGridView: some View {
@@ -384,16 +384,6 @@ struct PriorityDetailView: View {
                 .listStyle(PlainListStyle())
             }
             .navigationTitle(priority.rawValue)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Add Task") {
-                        // Add task functionality
-                    }
-                }
-            }
         }
     }
     
@@ -487,18 +477,6 @@ struct AddTaskView: View {
                 }
             }
             .navigationTitle("Add Task")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        dataManager.addTask(title: title, description: description, priority: selectedPriority)
-                        dismiss()
-                    }
-                    .disabled(title.isEmpty)
-                }
-            }
         }
     }
 }
@@ -541,17 +519,6 @@ struct PersonSelectorView: View {
                 }
             }
             .navigationTitle("Select Person")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Add Person") { showingAddPerson = true }
-                }
-            }
-            .sheet(isPresented: $showingAddPerson) {
-                AddPersonView(dataManager: dataManager)
-            }
         }
     }
 }
@@ -573,18 +540,6 @@ struct AddPersonView: View {
                 }
             }
             .navigationTitle("Add Person")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        dataManager.addPerson(name: name, email: email)
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty || email.isEmpty)
-                }
-            }
         }
     }
 }
