@@ -142,42 +142,47 @@ struct ContentView: View {
     
     private func matrixQuadrant(title: String, subtitle: String, priority: TaskItem.Priority, color: Color) -> some View {
         Button(action: { selectedPriority = priority }) {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
+                // Header
                 HStack {
                     Image(systemName: priority.icon)
                         .foregroundColor(color)
-                        .font(.title2)
+                        .font(.title3)
                     
                     Spacer()
                     
                     Text("\(taskManager.tasksForPriority(priority).count)")
-                        .font(.caption)
+                        .font(.caption2)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .frame(width: 20, height: 20)
+                        .frame(width: 18, height: 18)
                         .background(color)
                         .clipShape(Circle())
                 }
                 
-                VStack(spacing: 4) {
+                // Title and subtitle
+                VStack(spacing: 2) {
                     Text(title)
                         .font(.caption)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
+                        .lineLimit(2)
                     
                     Text(subtitle)
                         .font(.caption2)
                         .foregroundColor(color)
+                        .lineLimit(1)
                 }
                 
                 // Task list
-                VStack(spacing: 2) {
+                VStack(spacing: 1) {
                     let tasks = taskManager.tasksForPriority(priority)
-                    ForEach(Array(tasks.prefix(5)), id: \.id) { task in
-                        HStack {
+                    ForEach(Array(tasks.prefix(4)), id: \.id) { task in
+                        HStack(spacing: 4) {
                             Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(task.isCompleted ? .green : .gray)
                                 .font(.caption2)
+                                .frame(width: 12, height: 12)
                             
                             Text(task.title)
                                 .font(.caption2)
@@ -189,22 +194,22 @@ struct ContentView: View {
                         }
                     }
                     
-                    if tasks.count > 5 {
+                    if tasks.count > 4 {
                         Text("More...")
                             .font(.caption2)
                             .foregroundColor(color)
                             .fontWeight(.medium)
                     }
                 }
-                .padding(.top, 4)
+                .padding(.top, 2)
                 
                 Spacer()
             }
-            .padding(12)
-            .frame(height: 160)
+            .padding(8)
+            .frame(width: 140, height: 140)
             .background(color.opacity(0.1))
-            .cornerRadius(12)
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
+            .cornerRadius(10)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(color.opacity(0.3), lineWidth: 1))
         }
         .buttonStyle(PlainButtonStyle())
     }
