@@ -95,6 +95,11 @@ class TaskManager: ObservableObject {
         )
         tasks.append(newTask)
         print("Total tasks now: \(tasks.count)")
+        
+        // Force UI update
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
     }
     
     func loadSampleData() {
