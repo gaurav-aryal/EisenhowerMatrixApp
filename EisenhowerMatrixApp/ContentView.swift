@@ -105,6 +105,159 @@ class TaskManager: ObservableObject {
     }
 }
 
+// MARK: - Main Content View
+struct ContentView: View {
+    @StateObject private var taskManager = TaskManager()
+    @State private var selectedPriority: TaskItem.Priority?
+    @State private var showingAddTask = false
+    @State private var selectedPriorityForAdd: TaskItem.Priority = .urgentImportant
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 16) {
+                    Text("Eisenhower Matrix")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                }
+                .padding()
+                
+                // Matrix Grid
+                VStack(spacing: 0) {
+                    // Top section: Urgent quadrants
+                    HStack(spacing: 12) {
+                        matrixQuadrant(title: "Urgent & Important", subtitle: "Do First", priority: .urgentImportant, color: .red)
+                        matrixQuadrant(title: "Urgent & Not Important", subtitle: "Delegate", priority: .urgentNotImportant, color: .orange)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    // Center section with proper spacing
+                    Spacer()
+                        .frame(height: 120)
+                    
+                    // Bottom section: Not Urgent quadrants (truly centered)
+                    HStack {
+                        Spacer()
+                        HStack(spacing: 12) {
+                            matrixQuadrant(title: "Not Urgent & Important", subtitle: "Schedule", priority: .notUrgentImportant, color: .blue)
+                            matrixQuadrant(title: "Not Urgent & Not Important", subtitle: "Eliminate", priority: .notUrgentNotImportant, color: .gray)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    
+                    // Bottom spacing
+                    Spacer()
+                        .frame(height: 120)
+                }
+                
+                Spacer()
+            }
+        }
+        .sheet(item: $selectedPriority) { priority in
+            PriorityDetailView(taskManager: taskManager, priority: priority)
+        }
+        .sheet(isPresented: $showingAddTask) {
+            AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd)
+        }
+    }
+    
+    private func matrixQuadrant(title: String, subtitle: String, priority: TaskItem.Priority, color: Color) -> some View {
+        VStack(spacing: 8) {
+            // Header with proper alignment
+            HStack {
+                Image(systemName: priority.icon)
+                    .foregroundColor(color)
+                    .font(.title2)
+                    .frame(width: 24, height: 24, alignment: .center)
+                
+                Spacer()
+                
+                Text("\(taskManager.tasksForPriority(priority).count)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(width: 22, height: 22)
+                    .background(color)
+                    .clipShape(Circle())
+            }
+            .padding(.horizontal, 4)
+            
+            // Title and subtitle
+            VStack(spacing: 3) {
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                
+                Text(subtitle)
+                    .font(.caption2)
+                    .foregroundColor(color)
+                    .lineLimit(1)
+            }
+            
+            // Task list
+            VStack(spacing: 3) {
+                let tasks = taskManager.tasksForPriority(priority)
+                ForEach(Array(tasks.prefix(5)), id: \.id) { task in
+                    HStack(spacing: 6) {
+                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(task.isCompleted ? .green : .gray)
+                            .font(.caption)
+                            .frame(width: 14, height: 14)
+                        
+                        Text(task.title)
+                            .font(.caption)
+                            .lineLimit(1)
+                            .strikethrough(task.isCompleted)
+                            .foregroundColor(task.isCompleted ? .secondary : .primary)
+                        
+                        Spacer()
+                    }
+                }
+                
+                // Show "More..." only when there are more than 5 tasks
+                if tasks.count > 5 {
+                    Text("More...")
+                        .font(.caption)
+                        .foregroundColor(color)
+                        .fontWeight(.medium)
+                }
+            }
+            .padding(.top, 4)
+            
+            // Add button
+            Button(action: {
+                selectedPriorityForAdd = priority
+                showingAddTask = true
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(color)
+                        .font(.caption)
+                    Text("Add Task")
+                        .font(.caption)
+                        .foregroundColor(color)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            Spacer()
+        }
+        .padding(12)
+        .frame(width: 180, height: 220)
+        .background(color.opacity(0.1))
+        .cornerRadius(12)
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
+        .onTapGesture {
+            selectedPriority = priority
+        }
+    }
+}
+
 // MARK: - Add Task View
 struct AddTaskView: View {
     @ObservedObject var taskManager: TaskManager
