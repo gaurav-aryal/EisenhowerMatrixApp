@@ -6,32 +6,15 @@
 //
 
 import SwiftUI
-import CoreData
-
-// MARK: - Core Data Manager
-class CoreDataManager: ObservableObject {
-    static let shared = CoreDataManager()
-    
-    let container: NSPersistentContainer
-    
-    init() {
-        container = NSPersistentContainer(name: "EisenhowerMatrixApp")
-        container.loadPersistentStores { description, error in
-            if let error = error {
-                print("Core Data failed to load: \(error.localizedDescription)")
-            }
-        }
-    }
-}
 
 // MARK: - Task Model
 struct TaskItem: Identifiable {
-    let id: UUID
+    let id = UUID()
     var title: String
     var description: String
     var priority: Priority
-    var isCompleted: Bool
-    var dateCreated: Date
+    var isCompleted: Bool = false
+    var dateCreated: Date = Date()
     var personId: UUID
     
     enum Priority: String, CaseIterable, Codable {
@@ -70,10 +53,10 @@ struct TaskItem: Identifiable {
 
 // MARK: - Person Model
 struct PersonItem: Identifiable {
-    let id: UUID
+    let id = UUID()
     var name: String
     var email: String
-    var dateCreated: Date
+    var dateCreated: Date = Date()
 }
 
 // MARK: - Data Manager
@@ -82,150 +65,52 @@ class DataManager: ObservableObject {
     @Published var tasks: [TaskItem] = []
     @Published var persons: [PersonItem] = []
     
-    private let context: NSManagedObjectContext
-    
     init() {
-        self.context = CoreDataManager.shared.container.viewContext
-        loadPersons()
+        loadSamplePersons()
         if let firstPerson = persons.first {
             currentPerson = firstPerson
-            loadTasksForPerson(firstPerson.id)
+            loadSampleTasksForPerson(firstPerson.id)
         }
     }
     
     // MARK: - Person Management
     func addPerson(name: String, email: String) {
-        let person = Person(context: context)
-        person.id = UUID()
-        person.name = name
-        person.email = email
-        person.dateCreated = Date()
-        
-        saveContext()
-        loadPersons()
+        let person = PersonItem(name: name, email: email)
+        persons.append(person)
+        if currentPerson == nil {
+            currentPerson = person
+            loadSampleTasksForPerson(person.id)
+        }
     }
     
-    func loadPersons() {
-        let request: NSFetchRequest<Person> = Person.fetchRequest()
-        
-        do {
-            let personEntities = try context.fetch(request)
-            persons = personEntities.map { person in
-                PersonItem(
-                    id: person.id ?? UUID(),
-                    name: person.name ?? "",
-                    email: person.email ?? "",
-                    dateCreated: person.dateCreated ?? Date()
-                )
-            }
-        } catch {
-            print("Error loading persons: \(error)")
-        }
+    func loadSamplePersons() {
+        persons = [
+            PersonItem(name: "John Doe", email: "john@example.com"),
+            PersonItem(name: "Jane Smith", email: "jane@example.com")
+        ]
     }
     
     func selectPerson(_ person: PersonItem) {
         currentPerson = person
-        loadTasksForPerson(person.id)
+        loadSampleTasksForPerson(person.id)
     }
     
     // MARK: - Task Management
     func addTask(title: String, description: String, priority: TaskItem.Priority) {
         guard let currentPerson = currentPerson else { return }
         
-        let task = Task(context: context)
-        task.id = UUID()
-        task.title = title
-        task.taskDescription = description
-        task.priority = priority.rawValue
-        task.isCompleted = false
-        task.dateCreated = Date()
-        task.personId = currentPerson.id
-        
-        saveContext()
-        loadTasksForPerson(currentPerson.id)
+        let task = TaskItem(
+            title: title,
+            description: description,
+            priority: priority,
+            personId: currentPerson.id
+        )
+        tasks.append(task)
     }
     
-    func loadTasksForPerson(_ personId: UUID) {
-        let request: NSFetchRequest<Task> = Task.fetchRequest()
-        request.predicate = NSPredicate(format: "personId == %@", personId as CVarArg)
-        
-        do {
-            let taskEntities = try context.fetch(request)
-            tasks = taskEntities.map { task in
-                TaskItem(
-                    id: task.id ?? UUID(),
-                    title: task.title ?? "",
-                    description: task.taskDescription ?? "",
-                    priority: TaskItem.Priority(rawValue: task.priority ?? "") ?? .urgentImportant,
-                    isCompleted: task.isCompleted,
-                    dateCreated: task.dateCreated ?? Date(),
-                    personId: task.personId ?? UUID()
-                )
-            }
-        } catch {
-            print("Error loading tasks: \(error)")
-        }
-    }
-    
-    func toggleTaskCompletion(_ task: TaskItem) {
-        let request: NSFetchRequest<Task> = Task.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
-        
-        do {
-            let tasks = try context.fetch(request)
-            if let taskToUpdate = tasks.first {
-                taskToUpdate.isCompleted.toggle()
-                saveContext()
-                loadTasksForPerson(task.personId)
-            }
-        } catch {
-            print("Error updating task: \(error)")
-        }
-    }
-    
-    func deleteTask(_ task: TaskItem) {
-        let request: NSFetchRequest<Task> = Task.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
-        
-        do {
-            let tasks = try context.fetch(request)
-            if let taskToDelete = tasks.first {
-                context.delete(taskToDelete)
-                saveContext()
-                loadTasksForPerson(task.personId)
-            }
-        } catch {
-            print("Error deleting task: \(error)")
-        }
-    }
-    
-    func tasksForPriority(_ priority: TaskItem.Priority) -> [TaskItem] {
-        return tasks.filter { $0.priority == priority }
-    }
-    
-    func clearAllTasksForCurrentPerson() {
-        guard let currentPerson = currentPerson else { return }
-        
-        let request: NSFetchRequest<Task> = Task.fetchRequest()
-        request.predicate = NSPredicate(format: "personId == %@", currentPerson.id as CVarArg)
-        
-        do {
-            let tasksToDelete = try context.fetch(request)
-            for task in tasksToDelete {
-                context.delete(task)
-            }
-            saveContext()
-            loadTasksForPerson(currentPerson.id)
-        } catch {
-            print("Error clearing tasks: \(error)")
-        }
-    }
-    
-    func loadSampleDataForCurrentPerson() {
-        guard let currentPerson = currentPerson else { return }
-        
-        // Clear existing tasks first
-        clearAllTasksForCurrentPerson()
+    func loadSampleTasksForPerson(_ personId: UUID) {
+        // Clear existing tasks
+        tasks.removeAll()
         
         // Add exactly 2 tasks for each priority
         let sampleTasks = [
@@ -240,16 +125,37 @@ class DataManager: ObservableObject {
         ]
         
         for (title, description, priority) in sampleTasks {
-            addTask(title: title, description: description, priority: priority)
+            let task = TaskItem(
+                title: title,
+                description: description,
+                priority: priority,
+                personId: personId
+            )
+            tasks.append(task)
         }
     }
     
-    private func saveContext() {
-        do {
-            try context.save()
-        } catch {
-            print("Error saving context: \(error)")
+    func toggleTaskCompletion(_ task: TaskItem) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index].isCompleted.toggle()
         }
+    }
+    
+    func deleteTask(_ task: TaskItem) {
+        tasks.removeAll { $0.id == task.id }
+    }
+    
+    func tasksForPriority(_ priority: TaskItem.Priority) -> [TaskItem] {
+        return tasks.filter { $0.priority == priority }
+    }
+    
+    func clearAllTasksForCurrentPerson() {
+        tasks.removeAll()
+    }
+    
+    func loadSampleDataForCurrentPerson() {
+        guard let currentPerson = currentPerson else { return }
+        loadSampleTasksForPerson(currentPerson.id)
     }
 }
 
@@ -478,8 +384,6 @@ struct PriorityDetailView: View {
                 .listStyle(PlainListStyle())
             }
             .navigationTitle(priority.rawValue)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done") { dismiss() }
@@ -583,8 +487,6 @@ struct AddTaskView: View {
                 }
             }
             .navigationTitle("Add Task")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
@@ -639,8 +541,6 @@ struct PersonSelectorView: View {
                 }
             }
             .navigationTitle("Select Person")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
@@ -673,8 +573,6 @@ struct AddPersonView: View {
                 }
             }
             .navigationTitle("Add Person")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
