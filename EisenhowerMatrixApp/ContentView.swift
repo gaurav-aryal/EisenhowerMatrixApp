@@ -385,7 +385,7 @@ struct ContentView: View {
             AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
         }
         .sheet(item: $selectedPriority) { priority in
-            PriorityDetailView(taskManager: taskManager, priority: priority)
+            PriorityDetailView(taskManager: taskManager, priority: priority, draggedTaskId: $draggedTaskId)
         }
         .sheet(isPresented: $showingTaskDetail) {
             if let task = selectedTask {
@@ -547,6 +547,7 @@ struct PriorityDetailView: View {
     @State private var showingAddTask = false
     @State private var showCompleted = false
     @State private var editMode: EditMode = .inactive
+    @Binding var draggedTaskId: UUID?
 
     var body: some View {
         let activeTasks = taskManager.activeTasksForPriority(priority)
@@ -592,7 +593,7 @@ struct PriorityDetailView: View {
                 // Task List
                 Section {
                     ForEach(activeTasks) { task in
-                        TaskRowView(task: task, taskManager: taskManager)
+                        TaskRowView(task: task, taskManager: taskManager, draggedTaskId: $draggedTaskId)
                     }
                     .onDelete(perform: deleteActiveTasks)
                     .onMove(perform: moveTasks)
@@ -600,7 +601,7 @@ struct PriorityDetailView: View {
                     if !completedTasks.isEmpty {
                         DisclosureGroup(isExpanded: $showCompleted) {
                             ForEach(completedTasks) { task in
-                                TaskRowView(task: task, taskManager: taskManager)
+                                TaskRowView(task: task, taskManager: taskManager, draggedTaskId: $draggedTaskId)
                             }
                             .onDelete(perform: deleteCompletedTasks)
                         } label: {
@@ -670,12 +671,14 @@ struct TaskRowView: View {
     @State private var isEditing = false
     @State private var editedTitle: String
     @State private var editedDescription: String
+    @Binding var draggedTaskId: UUID?
     
-    init(task: TaskItem, taskManager: TaskManager) {
+    init(task: TaskItem, taskManager: TaskManager, draggedTaskId: Binding<UUID?>) {
         self.task = task
         self.taskManager = taskManager
         self._editedTitle = State(initialValue: task.title)
         self._editedDescription = State(initialValue: task.description)
+        self._draggedTaskId = draggedTaskId
     }
     
     var body: some View {
@@ -725,7 +728,14 @@ struct TaskRowView: View {
             }
             
             Spacer()
-            
+
+            Image(systemName: "line.3.horizontal")
+                .foregroundColor(.secondary)
+                .onDrag {
+                    draggedTaskId = task.id
+                    return NSItemProvider(object: task.id.uuidString as NSString)
+                }
+
             Button(action: {
                 showingEditTask = true
             }) {
