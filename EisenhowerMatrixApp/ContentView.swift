@@ -198,28 +198,40 @@ class TaskManager: ObservableObject {
         return tasks.filter { $0.priority == priority && $0.isCompleted }
     }
 
-    func moveTask(_ task: TaskItem, to newPriority: TaskPriority) {
-        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[index].priority = newPriority
-            saveTasks()
+    func moveTask(_ task: TaskItem, to newPriority: TaskPriority, before destinationTask: TaskItem? = nil) {
+        guard let currentIndex = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+
+        tasks[currentIndex].priority = newPriority
+
+        if let destTask = destinationTask,
+           let destIndex = tasks.firstIndex(where: { $0.id == destTask.id }) {
+            let movingTask = tasks.remove(at: currentIndex)
+            let adjustedIndex = currentIndex < destIndex ? destIndex - 1 : destIndex
+            tasks.insert(movingTask, at: adjustedIndex)
+        } else {
+            let movingTask = tasks.remove(at: currentIndex)
+            let lastIndex = tasks.lastIndex(where: { $0.priority == newPriority }) ?? tasks.endIndex
+            tasks.insert(movingTask, at: lastIndex)
         }
+
+        saveTasks()
     }
 
     func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
         let priorityTasks = tasksForPriority(priority)
-        guard sourceIndex < priorityTasks.count && destinationIndex < priorityTasks.count else { return }
+        guard sourceIndex >= 0, destinationIndex >= 0,
+              sourceIndex < priorityTasks.count,
+              destinationIndex < priorityTasks.count else { return }
 
         let sourceTask = priorityTasks[sourceIndex]
-        let destinationTask = priorityTasks[destinationIndex]
 
-        // Find the actual indices in the main tasks array
         if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
            let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
             let task = tasks.remove(at: sourceIndexInMain)
             let adjustedDestination = sourceIndexInMain < destIndexInMain ? destIndexInMain - 1 : destIndexInMain
             tasks.insert(task, at: adjustedDestination)
-            saveTasks()
         }
+        saveTasks()
     }
 
     func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskPriority) {
@@ -251,7 +263,7 @@ struct TaskDropDelegate: DropDelegate {
                 taskManager.reorderTasks(from: fromIndex, to: toIndex, in: currentPriority)
             }
         } else {
-            taskManager.moveTask(draggedTask, to: currentPriority)
+            taskManager.moveTask(draggedTask, to: currentPriority, before: task)
         }
     }
 
@@ -281,7 +293,7 @@ struct QuadrantDropDelegate: DropDelegate {
         if draggedTask.priority == priority {
             let priorityTasks = taskManager.tasksForPriority(priority)
             if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }) {
-                taskManager.reorderTasks(from: fromIndex, to: priorityTasks.count - 1, in: priority)
+                taskManager.reorderTasks(from: fromIndex, to: max(priorityTasks.count - 1, 0), in: priority)
             }
         } else {
             taskManager.moveTask(draggedTask, to: priority)
@@ -402,44 +414,55 @@ struct ContentView: View {
                 }
             }
             
-            // Task list - individual tasks clickable
-            VStack(alignment: .leading, spacing: 3) {
-                ForEach(tasks.prefix(5)) { task in
-                    HStack(spacing: 6) {
-                        Button(action: {
-                            taskManager.toggleTask(task)
-                        }) {
-                            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(task.isCompleted ? .green : color)
-                                .font(.caption)
-                        }
-                        .buttonStyle(PlainButtonStyle())
+            // Task list - individual tasks scrollable
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(tasks) { task in
+                        HStack(spacing: 6) {
+                            Button(action: {
+                                taskManager.toggleTask(task)
+                            }) {
+                                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(task.isCompleted ? .green : color)
+                                    .font(.caption)
+                            }
+                            .buttonStyle(PlainButtonStyle())
 
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(task.title)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .strikethrough(task.isCompleted)
-                                .lineLimit(1)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(task.title)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .strikethrough(task.isCompleted)
+                                    .lineLimit(1)
+                                    .onTapGesture {
+                                        selectedTask = task
+                                        showingTaskDetail = true
+                                    }
 
-                            Text(task.description)
+                                Text(task.description)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                                    .onTapGesture {
+                                        selectedTask = task
+                                        showingTaskDetail = true
+                                    }
+                            }
+
+                            Spacer()
+
+                            // Drag handle indicator
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundColor(color.opacity(0.6))
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
 
-                        Spacer()
-
-                        // Drag handle indicator
-                        Image(systemName: "line.3.horizontal")
-                            .foregroundColor(color.opacity(0.6))
-                            .font(.caption2)
-
-                        Button(action: {
-                            taskManager.deleteTask(task)
-                        }) {
-                            Text("🗑️")
-                                .font(.caption)
+                            Button(action: {
+                                taskManager.deleteTask(task)
+                            }) {
+                                Text("🗑️")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
@@ -473,28 +496,29 @@ struct ContentView: View {
                                 .foregroundColor(color)
                                 .fontWeight(.medium)
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
                     }
-
-                    Spacer()
-
-                    Button(action: {
-                        selectedPriorityForAdd = priority
-                        showingAddTask = true
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundColor(color)
-                                .font(.caption)
-                            Text("Add Task")
-                                .font(.caption)
-                                .foregroundColor(color)
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
+
+            HStack {
+                Spacer()
+                Button(action: {
+                    selectedPriorityForAdd = priority
+                    showingAddTask = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(color)
+                            .font(.caption)
+                        Text("Add Task")
+                            .font(.caption)
+                            .foregroundColor(color)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
             Spacer()
         }
         .padding(8)
@@ -599,6 +623,7 @@ struct PriorityDetailView: View {
                         TaskRowView(task: task, taskManager: taskManager)
                     }
                     .onDelete(perform: deleteActiveTasks)
+                    .onMove(perform: moveTasks)
 
                     if !completedTasks.isEmpty {
                         DisclosureGroup(isExpanded: $showCompleted) {
@@ -619,14 +644,12 @@ struct PriorityDetailView: View {
                     Button("Done") { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Add Task") {
-                        showingAddTask = true
+                    Button(action: { showingAddTask = true }) {
+                        Image(systemName: "plus")
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Edit") {
-                        // Enable edit mode for reordering
-                    }
+                    EditButton()
                 }
             }
         }
@@ -663,12 +686,8 @@ struct PriorityDetailView: View {
     }
     
     private func moveTasks(from source: IndexSet, to destination: Int) {
-        // Simple reordering within the same priority
-        let priorityTasks = taskManager.tasksForPriority(priority)
-        guard let sourceIndex = source.first, sourceIndex < priorityTasks.count else { return }
-        
-        // For now, just log the move operation
-        print("Moving task from index \(sourceIndex) to destination \(destination)")
+        guard let sourceIndex = source.first else { return }
+        taskManager.reorderTasks(from: sourceIndex, to: destination, in: priority)
     }
 }
 
