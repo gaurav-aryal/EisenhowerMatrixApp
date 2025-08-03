@@ -103,11 +103,34 @@ enum BackgroundMode: String, CaseIterable, Identifiable {
 // MARK: - Data Manager
 class TaskManager: ObservableObject {
     @Published var tasks: [TaskItem] = []
-    
-    init() {
-        loadSampleData()
+    private let userId: String
+
+    init(userId: String) {
+        self.userId = userId
+        loadTasks()
+        if tasks.isEmpty {
+            loadSampleData()
+        }
     }
-    
+
+    private func fileURL() -> URL {
+        let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return urls[0].appendingPathComponent("tasks_\(userId).json")
+    }
+
+    private func loadTasks() {
+        let url = fileURL()
+        guard let data = try? Data(contentsOf: url),
+              let decoded = try? JSONDecoder().decode([TaskItem].self, from: data) else { return }
+        tasks = decoded
+    }
+
+    private func saveTasks() {
+        let url = fileURL()
+        guard let data = try? JSONEncoder().encode(tasks) else { return }
+        try? data.write(to: url)
+    }
+
     func addTask(title: String, description: String, priority: TaskPriority) {
         let newTask = TaskItem(
             title: title,
@@ -115,9 +138,10 @@ class TaskManager: ObservableObject {
             priority: priority
         )
         tasks.append(newTask)
+        saveTasks()
     }
-    
-    func loadSampleData() {
+
+    private func loadSampleData() {
         tasks = [
             // Urgent & Important - 7 tasks (will show 5 + "More...")
             TaskItem(title: "Deadline project", description: "Complete urgent project", priority: .urgentImportant),
@@ -148,43 +172,48 @@ class TaskManager: ObservableObject {
     func toggleTask(_ task: TaskItem) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].isCompleted.toggle()
+            saveTasks()
         }
     }
-    
+
     func deleteTask(_ task: TaskItem) {
         tasks.removeAll { $0.id == task.id }
+        saveTasks()
     }
-    
+
     func tasksForPriority(_ priority: TaskPriority) -> [TaskItem] {
         return tasks.filter { $0.priority == priority }
     }
-    
+
     func moveTask(_ task: TaskItem, to newPriority: TaskPriority) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].priority = newPriority
+            saveTasks()
         }
     }
-    
+
     func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
         let priorityTasks = tasksForPriority(priority)
         guard sourceIndex < priorityTasks.count && destinationIndex < priorityTasks.count else { return }
-        
+
         let sourceTask = priorityTasks[sourceIndex]
         let destinationTask = priorityTasks[destinationIndex]
-        
+
         // Find the actual indices in the main tasks array
         if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
            let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
             let task = tasks.remove(at: sourceIndexInMain)
             tasks.insert(task, at: destIndexInMain)
+            saveTasks()
         }
     }
-    
+
     func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskPriority) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].title = title
             tasks[index].description = description
             tasks[index].priority = priority
+            saveTasks()
         }
     }
 }
@@ -243,7 +272,7 @@ struct QuadrantDropDelegate: DropDelegate {
 
 // MARK: - Content View
 struct ContentView: View {
-    @StateObject private var taskManager = TaskManager()
+    @ObservedObject var taskManager: TaskManager
     @State private var selectedPriority: TaskPriority?
     @State private var selectedPriorityForAdd: TaskPriority?
     @State private var selectedTask: TaskItem?
@@ -885,5 +914,5 @@ extension TaskPriority: Identifiable {
 }
 
 #Preview {
-    ContentView()
+    ContentView(taskManager: TaskManager(userId: "preview"))
 }
