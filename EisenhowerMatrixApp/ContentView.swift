@@ -464,17 +464,37 @@ struct ContentView: View {
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(color.opacity(0.3), lineWidth: 1)
-                        )
-                        .onDrag {
-                            draggedTaskId = task.id
-                            return NSItemProvider(object: task.id.uuidString as NSString)
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedTask = task
+                        showingTaskDetail = true
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(color.opacity(0.3), lineWidth: 1)
+                    )
+                    .onDrag {
+                        draggedTaskId = task.id
+                        return NSItemProvider(object: task.id.uuidString as NSString)
+                    }
+                    .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
+                }
+
+                HStack {
+                    if tasks.count > 5 {
+                        Button(action: {
+                            selectedPriority = priority
+                        }) {
+                            Text("More...")
+                                .font(.caption)
+                                .foregroundColor(color)
+                                .fontWeight(.medium)
                         }
                         .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
                     }
