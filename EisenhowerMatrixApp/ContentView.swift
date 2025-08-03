@@ -425,7 +425,7 @@ struct ContentView: View {
                                 .font(.caption)
                         }
                         .buttonStyle(PlainButtonStyle())
-                        
+
                         VStack(alignment: .leading, spacing: 1) {
                             Text(task.title)
                                 .font(.caption)
@@ -436,7 +436,7 @@ struct ContentView: View {
                                     selectedTask = task
                                     showingTaskDetail = true
                                 }
-                            
+
                             Text(task.description)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
@@ -446,14 +446,14 @@ struct ContentView: View {
                                     showingTaskDetail = true
                                 }
                         }
-                        
+
                         Spacer()
-                        
+
                         // Drag handle indicator
                         Image(systemName: "line.3.horizontal")
                             .foregroundColor(color.opacity(0.6))
                             .font(.caption2)
-                        
+
                         Button(action: {
                             taskManager.deleteTask(task)
                         }) {
@@ -477,38 +477,39 @@ struct ContentView: View {
                     .onDrop(of: [UTType.text], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
                 }
 
-                if tasks.count > 5 {
+                HStack {
+                    if tasks.count > 5 {
+                        Button(action: {
+                            selectedPriority = priority
+                            showingDetail = true
+                        }) {
+                            Text("More...")
+                                .font(.caption)
+                                .foregroundColor(color)
+                                .fontWeight(.medium)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+
+                    Spacer()
+
                     Button(action: {
                         selectedPriority = priority
                         showingDetail = true
                     }) {
-                        Text("More...")
-                            .font(.caption)
-                            .foregroundColor(color)
-                            .fontWeight(.medium)
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(color)
+                                .font(.caption)
+                            Text("Add Task")
+                                .font(.caption)
+                                .foregroundColor(color)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-
-            Spacer()
-            
-            // Add button
-            Button(action: {
-                selectedPriorityForAdd = priority
-                showingAddTask = true
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(color)
-                        .font(.caption)
-                    Text("Add Task")
-                        .font(.caption)
-                        .foregroundColor(color)
-                }
-            }
-            .buttonStyle(PlainButtonStyle())
-            
+            .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
             Spacer()
         }
         .padding(8)
