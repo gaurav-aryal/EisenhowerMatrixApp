@@ -198,21 +198,34 @@ class TaskManager: ObservableObject {
         return tasks.filter { $0.priority == priority && $0.isCompleted }
     }
 
-    func moveTask(_ task: TaskItem, to newPriority: TaskPriority) {
-        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[index].priority = newPriority
-            saveTasks()
+    func moveTask(_ task: TaskItem, to newPriority: TaskPriority, before destinationTask: TaskItem? = nil) {
+        guard let currentIndex = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+
+        tasks[currentIndex].priority = newPriority
+
+        if let destTask = destinationTask,
+           let destIndex = tasks.firstIndex(where: { $0.id == destTask.id }) {
+            let movingTask = tasks.remove(at: currentIndex)
+            let adjustedIndex = currentIndex < destIndex ? destIndex - 1 : destIndex
+            tasks.insert(movingTask, at: adjustedIndex)
+        } else {
+            let movingTask = tasks.remove(at: currentIndex)
+            let lastIndex = tasks.lastIndex(where: { $0.priority == newPriority }) ?? tasks.endIndex
+            tasks.insert(movingTask, at: lastIndex)
         }
+
+        saveTasks()
     }
 
     func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
         let priorityTasks = tasksForPriority(priority)
-        guard sourceIndex < priorityTasks.count && destinationIndex < priorityTasks.count else { return }
+        guard sourceIndex >= 0, destinationIndex >= 0,
+              sourceIndex < priorityTasks.count,
+              destinationIndex < priorityTasks.count else { return }
 
         let sourceTask = priorityTasks[sourceIndex]
         let destinationTask = priorityTasks[destinationIndex]
 
-        // Find the actual indices in the main tasks array
         if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
            let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
             let task = tasks.remove(at: sourceIndexInMain)
@@ -251,7 +264,7 @@ struct TaskDropDelegate: DropDelegate {
                 taskManager.reorderTasks(from: fromIndex, to: toIndex, in: currentPriority)
             }
         } else {
-            taskManager.moveTask(draggedTask, to: currentPriority)
+            taskManager.moveTask(draggedTask, to: currentPriority, before: task)
         }
     }
 
@@ -281,7 +294,7 @@ struct QuadrantDropDelegate: DropDelegate {
         if draggedTask.priority == priority {
             let priorityTasks = taskManager.tasksForPriority(priority)
             if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }) {
-                taskManager.reorderTasks(from: fromIndex, to: priorityTasks.count - 1, in: priority)
+                taskManager.reorderTasks(from: fromIndex, to: max(priorityTasks.count - 1, 0), in: priority)
             }
         } else {
             taskManager.moveTask(draggedTask, to: priority)
