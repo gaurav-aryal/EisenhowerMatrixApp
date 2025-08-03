@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
+		154716482E3F5B5100787151 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 154921832E3E93010025CFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1547163A2E3F5B5000787151;
+			remoteInfo = EisenhowerMatrixApp_iOS;
+		};
+		154716522E3F5B5100787151 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 154921832E3E93010025CFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1547163A2E3F5B5000787151;
+			remoteInfo = EisenhowerMatrixApp_iOS;
+		};
 		1549219A2E3E93020025CFB4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 154921832E3E93010025CFB4 /* Project object */;
@@ -24,12 +38,30 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1547163B2E3F5B5000787151 /* EisenhowerMatrixApp_iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EisenhowerMatrixApp_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		154716472E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EisenhowerMatrixApp_iOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		154716512E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EisenhowerMatrixApp_iOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1549218B2E3E93010025CFB4 /* EisenhowerMatrixApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EisenhowerMatrixApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		154921992E3E93020025CFB4 /* EisenhowerMatrixAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EisenhowerMatrixAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		154921A32E3E93020025CFB4 /* EisenhowerMatrixAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EisenhowerMatrixAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		1547163C2E3F5B5100787151 /* EisenhowerMatrixApp_iOS */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EisenhowerMatrixApp_iOS;
+			sourceTree = "<group>";
+		};
+		1547164A2E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EisenhowerMatrixApp_iOSTests;
+			sourceTree = "<group>";
+		};
+		154716542E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EisenhowerMatrixApp_iOSUITests;
+			sourceTree = "<group>";
+		};
 		1549218D2E3E93010025CFB4 /* EisenhowerMatrixApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = EisenhowerMatrixApp;
@@ -48,6 +80,27 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		154716382E3F5B5000787151 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		154716442E3F5B5100787151 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1547164E2E3F5B5100787151 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		154921882E3E93010025CFB4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -78,6 +131,9 @@
 				1549218D2E3E93010025CFB4 /* EisenhowerMatrixApp */,
 				1549219C2E3E93020025CFB4 /* EisenhowerMatrixAppTests */,
 				154921A62E3E93020025CFB4 /* EisenhowerMatrixAppUITests */,
+				1547163C2E3F5B5100787151 /* EisenhowerMatrixApp_iOS */,
+				1547164A2E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests */,
+				154716542E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests */,
 				1549218C2E3E93010025CFB4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +144,9 @@
 				1549218B2E3E93010025CFB4 /* EisenhowerMatrixApp.app */,
 				154921992E3E93020025CFB4 /* EisenhowerMatrixAppTests.xctest */,
 				154921A32E3E93020025CFB4 /* EisenhowerMatrixAppUITests.xctest */,
+				1547163B2E3F5B5000787151 /* EisenhowerMatrixApp_iOS.app */,
+				154716472E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests.xctest */,
+				154716512E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +154,74 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1547163A2E3F5B5000787151 /* EisenhowerMatrixApp_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 154716592E3F5B5100787151 /* Build configuration list for PBXNativeTarget "EisenhowerMatrixApp_iOS" */;
+			buildPhases = (
+				154716372E3F5B5000787151 /* Sources */,
+				154716382E3F5B5000787151 /* Frameworks */,
+				154716392E3F5B5000787151 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1547163C2E3F5B5100787151 /* EisenhowerMatrixApp_iOS */,
+			);
+			name = EisenhowerMatrixApp_iOS;
+			packageProductDependencies = (
+			);
+			productName = EisenhowerMatrixApp_iOS;
+			productReference = 1547163B2E3F5B5000787151 /* EisenhowerMatrixApp_iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		154716462E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1547165C2E3F5B5100787151 /* Build configuration list for PBXNativeTarget "EisenhowerMatrixApp_iOSTests" */;
+			buildPhases = (
+				154716432E3F5B5100787151 /* Sources */,
+				154716442E3F5B5100787151 /* Frameworks */,
+				154716452E3F5B5100787151 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				154716492E3F5B5100787151 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1547164A2E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests */,
+			);
+			name = EisenhowerMatrixApp_iOSTests;
+			packageProductDependencies = (
+			);
+			productName = EisenhowerMatrixApp_iOSTests;
+			productReference = 154716472E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		154716502E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1547165F2E3F5B5100787151 /* Build configuration list for PBXNativeTarget "EisenhowerMatrixApp_iOSUITests" */;
+			buildPhases = (
+				1547164D2E3F5B5100787151 /* Sources */,
+				1547164E2E3F5B5100787151 /* Frameworks */,
+				1547164F2E3F5B5100787151 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				154716532E3F5B5100787151 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				154716542E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests */,
+			);
+			name = EisenhowerMatrixApp_iOSUITests;
+			packageProductDependencies = (
+			);
+			productName = EisenhowerMatrixApp_iOSUITests;
+			productReference = 154716512E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		1549218A2E3E93010025CFB4 /* EisenhowerMatrixApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 154921AD2E3E93020025CFB4 /* Build configuration list for PBXNativeTarget "EisenhowerMatrixApp" */;
@@ -173,6 +300,17 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					1547163A2E3F5B5000787151 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					154716462E3F5B5100787151 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 1547163A2E3F5B5000787151;
+					};
+					154716502E3F5B5100787151 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 1547163A2E3F5B5000787151;
+					};
 					1549218A2E3E93010025CFB4 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -203,11 +341,35 @@
 				1549218A2E3E93010025CFB4 /* EisenhowerMatrixApp */,
 				154921982E3E93020025CFB4 /* EisenhowerMatrixAppTests */,
 				154921A22E3E93020025CFB4 /* EisenhowerMatrixAppUITests */,
+				1547163A2E3F5B5000787151 /* EisenhowerMatrixApp_iOS */,
+				154716462E3F5B5100787151 /* EisenhowerMatrixApp_iOSTests */,
+				154716502E3F5B5100787151 /* EisenhowerMatrixApp_iOSUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		154716392E3F5B5000787151 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		154716452E3F5B5100787151 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1547164F2E3F5B5100787151 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		154921892E3E93010025CFB4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -232,6 +394,27 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		154716372E3F5B5000787151 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		154716432E3F5B5100787151 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1547164D2E3F5B5100787151 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		154921872E3E93010025CFB4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -256,6 +439,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		154716492E3F5B5100787151 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1547163A2E3F5B5000787151 /* EisenhowerMatrixApp_iOS */;
+			targetProxy = 154716482E3F5B5100787151 /* PBXContainerItemProxy */;
+		};
+		154716532E3F5B5100787151 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1547163A2E3F5B5000787151 /* EisenhowerMatrixApp_iOS */;
+			targetProxy = 154716522E3F5B5100787151 /* PBXContainerItemProxy */;
+		};
 		1549219B2E3E93020025CFB4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1549218A2E3E93010025CFB4 /* EisenhowerMatrixApp */;
@@ -269,6 +462,141 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		1547165A2E3F5B5100787151 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gauravaryal.EisenhowerMatrixApp-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1547165B2E3F5B5100787151 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gauravaryal.EisenhowerMatrixApp-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1547165D2E3F5B5100787151 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gauravaryal.EisenhowerMatrixApp-iOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EisenhowerMatrixApp_iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EisenhowerMatrixApp_iOS";
+			};
+			name = Debug;
+		};
+		1547165E2E3F5B5100787151 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gauravaryal.EisenhowerMatrixApp-iOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EisenhowerMatrixApp_iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EisenhowerMatrixApp_iOS";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		154716602E3F5B5100787151 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gauravaryal.EisenhowerMatrixApp-iOSUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = EisenhowerMatrixApp_iOS;
+			};
+			name = Debug;
+		};
+		154716612E3F5B5100787151 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gauravaryal.EisenhowerMatrixApp-iOSUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = EisenhowerMatrixApp_iOS;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		154921AB2E3E93020025CFB4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -388,6 +716,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = EisenhowerMatrixApp/EisenhowerMatrixApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -425,6 +754,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = EisenhowerMatrixApp/EisenhowerMatrixApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -546,6 +876,33 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		154716592E3F5B5100787151 /* Build configuration list for PBXNativeTarget "EisenhowerMatrixApp_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1547165A2E3F5B5100787151 /* Debug */,
+				1547165B2E3F5B5100787151 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1547165C2E3F5B5100787151 /* Build configuration list for PBXNativeTarget "EisenhowerMatrixApp_iOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1547165D2E3F5B5100787151 /* Debug */,
+				1547165E2E3F5B5100787151 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1547165F2E3F5B5100787151 /* Build configuration list for PBXNativeTarget "EisenhowerMatrixApp_iOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				154716602E3F5B5100787151 /* Debug */,
+				154716612E3F5B5100787151 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		154921862E3E93010025CFB4 /* Build configuration list for PBXProject "EisenhowerMatrixApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

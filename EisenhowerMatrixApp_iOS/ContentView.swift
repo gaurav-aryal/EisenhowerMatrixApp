@@ -1,0 +1,1055 @@
+//
+//  ContentView.swift
+//  EisenhowerMatrixApp
+//
+//  Created by user280681 on 8/2/25.
+//  Copyright © 2025 EisenhowerMatrixApp. All rights reserved.
+//
+
+import SwiftUI
+import UniformTypeIdentifiers
+
+struct TaskItem: Identifiable, Codable {
+    let id: UUID
+    var title: String
+    var description: String
+    var priority: TaskPriority
+    var isCompleted: Bool = false
+    var dateCreated: Date = Date()
+    var dueDate: Date?
+
+    init(title: String, description: String, priority: TaskPriority, dueDate: Date? = nil) {
+        self.id = UUID()
+        self.title = title
+        self.description = description
+        self.priority = priority
+        self.dueDate = dueDate
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.description = try container.decode(String.self, forKey: .description)
+        self.priority = try container.decode(TaskPriority.self, forKey: .priority)
+        self.isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
+        self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
+        self.dueDate = try container.decodeIfPresent(Date.self, forKey: .dueDate)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(description, forKey: .description)
+        try container.encode(priority, forKey: .priority)
+        try container.encode(isCompleted, forKey: .isCompleted)
+        try container.encode(dateCreated, forKey: .dateCreated)
+        try container.encodeIfPresent(dueDate, forKey: .dueDate)
+    }
+
+    // Custom coding keys to handle UUID
+    private enum CodingKeys: String, CodingKey {
+        case id, title, description, priority, isCompleted, dateCreated, dueDate
+    }
+    
+}
+
+enum TaskPriority: String, CaseIterable, Codable, Identifiable {
+    case urgentImportant = "Urgent & Important"
+    case urgentNotImportant = "Urgent & Not Important"
+    case notUrgentImportant = "Not Urgent & Important"
+    case notUrgentNotImportant = "Not Urgent & Not Important"
+
+    var id: String { rawValue }
+    
+    var color: SwiftUI.Color {
+        switch self {
+        case .urgentImportant: return SwiftUI.Color.red
+        case .urgentNotImportant: return SwiftUI.Color.orange
+        case .notUrgentImportant: return SwiftUI.Color.blue
+        case .notUrgentNotImportant: return SwiftUI.Color(red: 0.7, green: 0.7, blue: 0.7)
+        }
+    }
+    
+    /// Readable title split across lines for compact quadrant headers
+    var displayTitle: String {
+        switch self {
+        case .urgentImportant:
+            return "Urgent &\nImportant"
+        case .urgentNotImportant:
+            return "Urgent &\nNot Important"
+        case .notUrgentImportant:
+            return "Not Urgent &\nImportant"
+        case .notUrgentNotImportant:
+            return "Not Urgent &\nNot Important"
+        }
+    }
+}
+
+// MARK: - App Appearance
+enum BackgroundMode: String, CaseIterable, Identifiable {
+    case dark = "Dark"
+    case gray = "Gray"
+    case white = "White"
+
+    var id: String { rawValue }
+
+    var color: Color {
+        switch self {
+        case .dark:
+            return .black
+        case .gray:
+            return Color(red: 0.7, green: 0.7, blue: 0.7)
+        case .white:
+            return .white
+        }
+    }
+}
+
+// MARK: - Data Manager
+class TaskManager: ObservableObject {
+    @Published var tasks: [TaskItem] = []
+    private let userId: String
+
+    init(userId: String) {
+        self.userId = userId
+        loadTasks()
+        if tasks.isEmpty {
+            loadSampleData()
+        }
+    }
+
+    private func fileURL() -> URL {
+        let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return urls[0].appendingPathComponent("tasks_\(userId).json")
+    }
+
+    private func loadTasks() {
+        let url = fileURL()
+        guard let data = try? Data(contentsOf: url),
+              let decoded = try? JSONDecoder().decode([TaskItem].self, from: data) else { return }
+        tasks = decoded
+    }
+
+    private func saveTasks() {
+        let url = fileURL()
+        guard let data = try? JSONEncoder().encode(tasks) else { return }
+        try? data.write(to: url)
+    }
+
+    func addTask(title: String, description: String, priority: TaskPriority, dueDate: Date? = nil) {
+        let newTask = TaskItem(
+            title: title,
+            description: description,
+            priority: priority,
+            dueDate: dueDate
+        )
+        tasks.append(newTask)
+        saveTasks()
+    }
+
+    private func loadSampleData() {
+        tasks = [
+            // Urgent & Important - 7 tasks (will show 5 + "More...")
+            TaskItem(title: "Deadline project", description: "Complete urgent project", priority: .urgentImportant),
+            TaskItem(title: "Team meeting", description: "Prepare for meeting", priority: .urgentImportant),
+            TaskItem(title: "Client presentation", description: "Prepare slides", priority: .urgentImportant),
+            TaskItem(title: "Budget review", description: "Review quarterly budget", priority: .urgentImportant),
+            TaskItem(title: "Emergency call", description: "Handle urgent client call", priority: .urgentImportant),
+            TaskItem(title: "Project deadline", description: "Finalize project deliverables", priority: .urgentImportant),
+            TaskItem(title: "Critical bug fix", description: "Fix production bug", priority: .urgentImportant),
+            
+            // Urgent & Not Important - 3 tasks (will show all 3)
+            TaskItem(title: "Email responses", description: "Reply to emails", priority: .urgentNotImportant),
+            TaskItem(title: "Phone calls", description: "Return calls", priority: .urgentNotImportant),
+            TaskItem(title: "Meeting prep", description: "Prepare for team meeting", priority: .urgentNotImportant),
+            
+            // Not Urgent & Important - 4 tasks (will show all 4)
+            TaskItem(title: "Strategic planning", description: "Plan goals", priority: .notUrgentImportant),
+            TaskItem(title: "Skill development", description: "Learn technology", priority: .notUrgentImportant),
+            TaskItem(title: "Network building", description: "Connect with colleagues", priority: .notUrgentImportant),
+            TaskItem(title: "Process improvement", description: "Optimize workflows", priority: .notUrgentImportant),
+            
+            // Not Urgent & Not Important - 2 tasks (will show all 2)
+            TaskItem(title: "Social media", description: "Check updates", priority: .notUrgentNotImportant),
+            TaskItem(title: "Some interruptions", description: "Handle distractions", priority: .notUrgentNotImportant)
+        ]
+    }
+    
+    func toggleTask(_ task: TaskItem) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index].isCompleted.toggle()
+            saveTasks()
+        }
+    }
+
+    func deleteTask(_ task: TaskItem) {
+        tasks.removeAll { $0.id == task.id }
+        saveTasks()
+    }
+
+    func tasksForPriority(_ priority: TaskPriority) -> [TaskItem] {
+        return tasks.filter { $0.priority == priority }
+    }
+
+    /// Returns only tasks that are not marked as completed for the given priority.
+    func activeTasksForPriority(_ priority: TaskPriority) -> [TaskItem] {
+        return tasks.filter { $0.priority == priority && !$0.isCompleted }
+    }
+
+    /// Returns only tasks that are completed for the given priority.
+    func completedTasksForPriority(_ priority: TaskPriority) -> [TaskItem] {
+        return tasks.filter { $0.priority == priority && $0.isCompleted }
+    }
+
+    func moveTask(_ task: TaskItem, to newPriority: TaskPriority, before destinationTask: TaskItem? = nil) {
+        guard let currentIndex = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+
+        tasks[currentIndex].priority = newPriority
+
+        if let destTask = destinationTask,
+           let destIndex = tasks.firstIndex(where: { $0.id == destTask.id }) {
+            let movingTask = tasks.remove(at: currentIndex)
+            let adjustedIndex = currentIndex < destIndex ? destIndex - 1 : destIndex
+            tasks.insert(movingTask, at: adjustedIndex)
+        } else {
+            let movingTask = tasks.remove(at: currentIndex)
+            let lastIndex = tasks.lastIndex(where: { $0.priority == newPriority }) ?? tasks.endIndex
+            tasks.insert(movingTask, at: lastIndex)
+        }
+
+        saveTasks()
+    }
+
+    func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
+        let priorityTasks = activeTasksForPriority(priority)
+        guard sourceIndex >= 0,
+              sourceIndex < priorityTasks.count else { return }
+
+        let sourceTask = priorityTasks[sourceIndex]
+        guard let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }) else { return }
+
+        let task = tasks.remove(at: sourceIndexInMain)
+
+        if destinationIndex >= priorityTasks.count {
+            if let lastActive = tasks.lastIndex(where: { $0.priority == priority && !$0.isCompleted }) {
+                tasks.insert(task, at: lastActive + 1)
+            } else if let lastPriority = tasks.lastIndex(where: { $0.priority == priority }) {
+                tasks.insert(task, at: lastPriority + 1)
+            } else {
+                tasks.append(task)
+            }
+        } else {
+            let destinationTask = priorityTasks[destinationIndex]
+            if let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
+                let adjustedDestination = sourceIndexInMain < destIndexInMain ? destIndexInMain - 1 : destIndexInMain
+                tasks.insert(task, at: adjustedDestination)
+            } else {
+                tasks.insert(task, at: sourceIndexInMain)
+            }
+        }
+
+        saveTasks()
+    }
+
+    func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskPriority, dueDate: Date?) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index].title = title
+            tasks[index].description = description
+            tasks[index].priority = priority
+            tasks[index].dueDate = dueDate
+            saveTasks()
+        }
+    }
+}
+
+// MARK: - Drop Delegates
+struct TaskDropDelegate: DropDelegate {
+    let task: TaskItem
+    let taskManager: TaskManager
+    let currentPriority: TaskPriority
+    @Binding var draggedTaskId: UUID?
+
+    func dropEntered(_ info: DropInfo) {
+        guard let draggedId = draggedTaskId,
+              draggedId != task.id,
+              let draggedTask = taskManager.tasks.first(where: { $0.id == draggedId }) else { return }
+
+        if draggedTask.priority == currentPriority {
+            let priorityTasks = taskManager.activeTasksForPriority(currentPriority)
+            if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }),
+               let toIndex = priorityTasks.firstIndex(where: { $0.id == task.id }) {
+                taskManager.reorderTasks(from: fromIndex, to: toIndex, in: currentPriority)
+            }
+        } else {
+            taskManager.moveTask(draggedTask, to: currentPriority, before: task)
+        }
+    }
+
+    func dropUpdated(_ info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedTaskId = nil
+        return true
+    }
+}
+
+struct QuadrantDropDelegate: DropDelegate {
+    let priority: TaskPriority
+    let taskManager: TaskManager
+    @Binding var draggedTaskId: UUID?
+
+    func dropUpdated(_ info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        guard let draggedId = draggedTaskId,
+              let draggedTask = taskManager.tasks.first(where: { $0.id == draggedId }) else { return false }
+
+        if draggedTask.priority == priority {
+            let priorityTasks = taskManager.activeTasksForPriority(priority)
+            if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }) {
+                taskManager.reorderTasks(from: fromIndex, to: priorityTasks.count, in: priority)
+            }
+        } else {
+            taskManager.moveTask(draggedTask, to: priority)
+        }
+
+        draggedTaskId = nil
+        return true
+    }
+}
+
+// MARK: - Content View
+struct ContentView: View {
+    @ObservedObject var taskManager: TaskManager
+    @State private var selectedPriority: TaskPriority?
+    @State private var selectedPriorityForAdd: TaskPriority?
+    @State private var selectedTask: TaskItem?
+    @State private var showingAddTask = false
+    @State private var showingTaskDetail = false
+    @State private var isDragging = false
+    @State private var draggedTaskId: UUID?
+    @State private var backgroundMode: BackgroundMode = .white
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 16) {
+                    Text("Eisenhower Matrix")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                }
+                .padding()
+
+                Picker("Background", selection: $backgroundMode) {
+                    ForEach(BackgroundMode.allCases) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+
+                // Matrix Grid
+                GeometryReader { geometry in
+                    ZStack {
+                        VStack(spacing: 0) {
+                            HStack(spacing: 0) {
+                                matrixQuadrant(priority: .urgentImportant, color: .red)
+                                matrixQuadrant(priority: .urgentNotImportant, color: .orange)
+                            }
+                            HStack(spacing: 0) {
+                                matrixQuadrant(priority: .notUrgentImportant, color: .blue)
+                                matrixQuadrant(priority: .notUrgentNotImportant, color: .gray)
+                            }
+                        }
+                        Path { path in
+                            let width = geometry.size.width
+                            let height = geometry.size.height
+                            path.move(to: CGPoint(x: width / 2, y: 0))
+                            path.addLine(to: CGPoint(x: width / 2, y: height))
+                            path.move(to: CGPoint(x: 0, y: height / 2))
+                            path.addLine(to: CGPoint(x: width, y: height / 2))
+                        }
+                        .stroke(Color.primary, lineWidth: 2)
+                        .allowsHitTesting(false)
+                    }
+                }
+
+                Spacer()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(backgroundMode.color.ignoresSafeArea())
+        .preferredColorScheme(backgroundMode == .white ? .light : .dark)
+        .sheet(isPresented: $showingAddTask) {
+            AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
+        }
+        .sheet(item: $selectedPriority) { priority in
+            PriorityDetailView(taskManager: taskManager, priority: priority, draggedTaskId: $draggedTaskId)
+        }
+        .sheet(isPresented: $showingTaskDetail) {
+            if let task = selectedTask {
+                TaskDetailView(task: task, taskManager: taskManager)
+            }
+        }
+    }
+    
+    private func matrixQuadrant(priority: TaskPriority, color: Color) -> some View {
+        let tasks = taskManager.activeTasksForPriority(priority)
+        
+        return VStack(spacing: 6) {
+            // Header with title - clickable to open full list
+            VStack(spacing: 4) {
+                HStack {
+                    Text(priority.displayTitle)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(color)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                        .onTapGesture {
+                            selectedPriority = priority
+                        }
+
+                    Spacer()
+                }
+            }
+            
+            // Task list - individual tasks scrollable
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(tasks) { task in
+                        TaskRowInQuadrant(
+                            task: task,
+                            taskManager: taskManager,
+                            priority: priority,
+                            color: color,
+                            selectedTask: $selectedTask,
+                            showingTaskDetail: $showingTaskDetail,
+                            draggedTaskId: $draggedTaskId
+                        )
+                    }
+                }
+
+                HStack {
+                    if tasks.count > 5 {
+                        Button(action: {
+                            selectedPriority = priority
+                        }) {
+                            Text("More...")
+                                .font(.caption)
+                                .foregroundColor(color)
+                                .fontWeight(.medium)
+                        }
+                        .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
+                            priority: priority, 
+                            taskManager: taskManager, 
+                            draggedTaskId: $draggedTaskId
+                        ))
+                    }
+                }
+            }
+            .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
+                priority: priority, 
+                taskManager: taskManager, 
+                draggedTaskId: $draggedTaskId
+            ))
+
+            HStack {
+                Spacer()
+                Button(action: {
+                    selectedPriorityForAdd = priority
+                    showingAddTask = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(color)
+                            .font(.caption)
+                        Text("Add Task")
+                            .font(.caption)
+                            .foregroundColor(color)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            Spacer()
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(color.opacity(0.1))
+        .overlay(
+            Rectangle()
+                .stroke(color, lineWidth: 1)
+        )
+        .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
+            priority: priority, 
+            taskManager: taskManager, 
+            draggedTaskId: $draggedTaskId
+        ))
+    }
+}
+
+// MARK: - Add Task View
+struct AddTaskView: View {
+    @ObservedObject var taskManager: TaskManager
+    let priority: TaskPriority
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var title = ""
+    @State private var description = ""
+    @State private var hasDueDate = false
+    @State private var dueDate = Date()
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Task Details")) {
+                    TextField("Task title", text: $title)
+                    TextField("Description", text: $description)
+                }
+
+                Section(header: Text("Due Date")) {
+                    Toggle("Set Due Date", isOn: $hasDueDate.animation())
+                    if hasDueDate {
+                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                    }
+                }
+
+                Section(header: Text("Priority")) {
+                    Text(priority.rawValue)
+                        .foregroundColor(priority.color)
+                        .fontWeight(.semibold)
+                }
+            }
+            .navigationTitle("Add Task")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        taskManager.addTask(title: title, description: description, priority: priority, dueDate: hasDueDate ? dueDate : nil)
+                        dismiss()
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Priority Detail View
+struct PriorityDetailView: View {
+    @ObservedObject var taskManager: TaskManager
+    let priority: TaskPriority
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingAddTask = false
+    @State private var showCompleted = false
+    #if os(iOS)
+    @State private var editMode: EditMode = .inactive
+    #endif
+    @Binding var draggedTaskId: UUID?
+
+    var body: some View {
+        let activeTasks = taskManager.activeTasksForPriority(priority)
+        let completedTasks = taskManager.completedTasksForPriority(priority)
+
+        return NavigationView {
+            List {
+                // Header
+                Section {
+                    VStack(spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(priority.rawValue)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+
+                                Text(getSubtitle(for: priority))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+                        }
+
+                        HStack {
+                            Text("\(activeTasks.count) tasks")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text("\(completedTasks.count) completed")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                    }
+                    .padding()
+                    .background(priority.color.opacity(0.1))
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+
+                // Task List
+                Section {
+                    ForEach(activeTasks) { task in
+                        TaskRowView(task: task, taskManager: taskManager, draggedTaskId: $draggedTaskId)
+                    }
+                    .onDelete(perform: deleteActiveTasks)
+                    .onMove(perform: moveTasks)
+
+                    if !completedTasks.isEmpty {
+                        DisclosureGroup(isExpanded: $showCompleted) {
+                            ForEach(completedTasks) { task in
+                                TaskRowView(task: task, taskManager: taskManager, draggedTaskId: $draggedTaskId)
+                            }
+                            .onDelete(perform: deleteCompletedTasks)
+                        } label: {
+                            Text("Completed (\(completedTasks.count))")
+                        }
+                    }
+                }
+            }
+            .listStyle(PlainListStyle())
+            .scrollIndicators(.visible)
+#if os(iOS)
+            .environment(\.editMode, $editMode)
+#endif
+            .navigationTitle(priority.rawValue)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: { showingAddTask = true }) {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddTask) {
+            AddTaskView(taskManager: taskManager, priority: priority)
+        }
+    }
+    
+    private func getSubtitle(for priority: TaskPriority) -> String {
+        switch priority {
+        case .urgentImportant:
+            return "Do First - These require immediate attention"
+        case .urgentNotImportant:
+            return "Delegate - These can be delegated to others"
+        case .notUrgentImportant:
+            return "Schedule - Plan these for later"
+        case .notUrgentNotImportant:
+            return "Eliminate - Consider removing these tasks"
+        }
+    }
+    
+    private func deleteActiveTasks(offsets: IndexSet) {
+        let tasksToDelete = taskManager.activeTasksForPriority(priority)
+        for index in offsets {
+            taskManager.deleteTask(tasksToDelete[index])
+        }
+    }
+
+    private func deleteCompletedTasks(offsets: IndexSet) {
+        let tasksToDelete = taskManager.completedTasksForPriority(priority)
+        for index in offsets {
+            taskManager.deleteTask(tasksToDelete[index])
+        }
+    }
+    
+    private func moveTasks(from source: IndexSet, to destination: Int) {
+        guard let sourceIndex = source.first else { return }
+        taskManager.reorderTasks(from: sourceIndex, to: destination, in: priority)
+    }
+}
+
+// MARK: - Task Row View
+struct TaskRowView: View {
+    let task: TaskItem
+    @ObservedObject var taskManager: TaskManager
+    @State private var showingEditTask = false
+    @State private var isEditing = false
+    @State private var editedTitle: String
+    @State private var editedDescription: String
+    @Binding var draggedTaskId: UUID?
+    
+    init(task: TaskItem, taskManager: TaskManager, draggedTaskId: Binding<UUID?>) {
+        self.task = task
+        self.taskManager = taskManager
+        self._editedTitle = State(initialValue: task.title)
+        self._editedDescription = State(initialValue: task.description)
+        self._draggedTaskId = draggedTaskId
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: { taskManager.toggleTask(task) }) {
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(task.isCompleted ? .green : .gray)
+                    .font(.title3)
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            VStack(alignment: .leading, spacing: 4) {
+                if isEditing {
+                    TextField("Task title", text: $editedTitle)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .onSubmit {
+                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority, dueDate: task.dueDate)
+                            isEditing = false
+                        }
+                    
+                    TextField("Description", text: $editedDescription)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .onSubmit {
+                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority, dueDate: task.dueDate)
+                            isEditing = false
+                        }
+                } else {
+                    Text(task.title)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .strikethrough(task.isCompleted)
+                        .foregroundColor(task.isCompleted ? .secondary : .primary)
+                        .onTapGesture {
+                            isEditing = true
+                        }
+                    
+                    Text(task.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .strikethrough(task.isCompleted)
+                        .onTapGesture {
+                            isEditing = true
+                        }
+                }
+            }
+            
+            Spacer()
+
+            Image(systemName: "line.3.horizontal")
+                .foregroundColor(.secondary)
+                .onDrag {
+                    draggedTaskId = task.id
+                    return NSItemProvider(object: task.id.uuidString as NSString)
+                }
+
+            Button(action: {
+                showingEditTask = true
+            }) {
+                Image(systemName: "pencil")
+                    .foregroundColor(.blue)
+                    .font(.title3)
+            }
+            .buttonStyle(PlainButtonStyle())
+            if let due = task.dueDate {
+                Text(due, style: .date)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            } else {
+                Text(task.dateCreated, style: .date)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+        .sheet(isPresented: $showingEditTask) {
+            EditTaskView(taskManager: taskManager, task: task)
+        }
+    }
+}
+
+// MARK: - Edit Task View
+struct EditTaskView: View {
+    @ObservedObject var taskManager: TaskManager
+    let task: TaskItem
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var title: String
+    @State private var description: String
+    @State private var priority: TaskPriority
+    @State private var hasDueDate: Bool
+    @State private var dueDate: Date
+
+    init(taskManager: TaskManager, task: TaskItem) {
+        self.taskManager = taskManager
+        self.task = task
+        self._title = State(initialValue: task.title)
+        self._description = State(initialValue: task.description)
+        self._priority = State(initialValue: task.priority)
+        self._hasDueDate = State(initialValue: task.dueDate != nil)
+        self._dueDate = State(initialValue: task.dueDate ?? Date())
+    }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Task Details")) {
+                    TextField("Task title", text: $title)
+                    TextField("Description", text: $description)
+                }
+
+                Section(header: Text("Due Date")) {
+                    Toggle("Set Due Date", isOn: $hasDueDate.animation())
+                    if hasDueDate {
+                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                    }
+                }
+
+                Section(header: Text("Priority")) {
+                    Picker("Priority", selection: $priority) {
+                        ForEach(TaskPriority.allCases, id: \.self) { priority in
+                            Text(priority.rawValue)
+                                .foregroundColor(priority.color)
+                                .tag(priority)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+            }
+            .navigationTitle("Edit Task")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        taskManager.updateTask(task, title: title, description: description, priority: priority, dueDate: hasDueDate ? dueDate : nil)
+                        dismiss()
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Task Detail View
+struct TaskDetailView: View {
+    let task: TaskItem
+    @ObservedObject var taskManager: TaskManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingEditTask = false
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // Task Header
+                VStack(spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(task.priority.rawValue)
+                                .font(.headline)
+                                .foregroundColor(task.priority.color)
+
+                            Text(getSubtitle(for: task.priority))
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+                    }
+                    
+                    HStack {
+                        Text("Created: \(task.dateCreated, style: .date)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        if let due = task.dueDate {
+                            Text("Due: \(due, style: .date)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        Button(action: {
+                            taskManager.toggleTask(task)
+                        }) {
+                            HStack {
+                                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(task.isCompleted ? .green : .gray)
+                                Text(task.isCompleted ? "Completed" : "Mark Complete")
+                                    .font(.caption)
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding()
+                .background(task.priority.color.opacity(0.1))
+                .cornerRadius(12)
+                
+                // Task Content
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Title")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+
+                        Text(task.title)
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .strikethrough(task.isCompleted)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Description")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+
+                        Text(task.description)
+                            .font(.body)
+                            .strikethrough(task.isCompleted)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Date")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+
+                        if let due = task.dueDate {
+                            Text(due, style: .date)
+                                .font(.body)
+                        } else {
+                            Text(task.dateCreated, style: .date)
+                                .font(.body)
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Spacer()
+            }
+            .navigationTitle("Task Details")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Edit") {
+                        showingEditTask = true
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingEditTask) {
+            EditTaskView(taskManager: taskManager, task: task)
+        }
+    }
+    
+    private func getSubtitle(for priority: TaskPriority) -> String {
+        switch priority {
+        case .urgentImportant:
+            return "Do First - These require immediate attention"
+        case .urgentNotImportant:
+            return "Delegate - These can be delegated to others"
+        case .notUrgentImportant:
+            return "Schedule - Plan these for later"
+        case .notUrgentNotImportant:
+            return "Eliminate - Consider removing these tasks"
+        }
+    }
+}
+
+// MARK: - Task Row In Quadrant
+struct TaskRowInQuadrant: View {
+    let task: TaskItem
+    let taskManager: TaskManager
+    let priority: TaskPriority
+    let color: Color
+    @Binding var selectedTask: TaskItem?
+    @Binding var showingTaskDetail: Bool
+    @Binding var draggedTaskId: UUID?
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: {
+                taskManager.toggleTask(task)
+            }) {
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(task.isCompleted ? .green : color)
+                    .font(.caption)
+            }
+            .buttonStyle(PlainButtonStyle())
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(task.title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .strikethrough(task.isCompleted)
+                    .lineLimit(1)
+                    .onTapGesture {
+                        selectedTask = task
+                        showingTaskDetail = true
+                    }
+
+                Text(task.description)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .onTapGesture {
+                        selectedTask = task
+                        showingTaskDetail = true
+                    }
+            }
+
+            Spacer()
+
+            // Drag handle indicator
+            Image(systemName: "line.3.horizontal")
+                .foregroundColor(color.opacity(0.6))
+                .font(.caption2)
+
+            Button(action: {
+                taskManager.deleteTask(task)
+            }) {
+                Text("🗑️")
+                    .font(.caption)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedTask = task
+            showingTaskDetail = true
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(color.opacity(0.3), lineWidth: 1)
+        )
+        .onDrag {
+            draggedTaskId = task.id
+            return NSItemProvider(object: task.id.uuidString as NSString)
+        }
+        .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(
+            task: task, 
+            taskManager: taskManager, 
+            currentPriority: priority, 
+            draggedTaskId: $draggedTaskId
+        ))
+    }
+}
+
+#Preview {
+    ContentView(taskManager: TaskManager(userId: "preview"))
+}
