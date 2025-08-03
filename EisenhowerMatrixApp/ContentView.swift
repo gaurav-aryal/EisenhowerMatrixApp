@@ -64,7 +64,7 @@ enum TaskPriority: String, CaseIterable, Codable, Identifiable {
         case .urgentImportant: return SwiftUI.Color.red
         case .urgentNotImportant: return SwiftUI.Color.orange
         case .notUrgentImportant: return SwiftUI.Color.blue
-        case .notUrgentNotImportant: return SwiftUI.Color.gray
+        case .notUrgentNotImportant: return SwiftUI.Color(red: 0.7, green: 0.7, blue: 0.7)
         }
     }
     
@@ -96,7 +96,7 @@ enum BackgroundMode: String, CaseIterable, Identifiable {
         case .dark:
             return .black
         case .gray:
-            return .gray
+            return Color(red: 0.7, green: 0.7, blue: 0.7)
         case .white:
             return .white
         }
