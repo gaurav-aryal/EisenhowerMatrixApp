@@ -1,8 +1,12 @@
 import SwiftUI
 import AuthenticationServices
+#if canImport(GoogleSignIn) && canImport(GoogleSignInSwift)
 import GoogleSignIn
 import GoogleSignInSwift
+#endif
+#if canImport(UIKit)
 import UIKit
+#endif
 
 struct LoginView: View {
     @State private var username: String = ""
@@ -37,6 +41,7 @@ struct LoginView: View {
             .frame(height: 45)
             .padding(.horizontal)
 
+            #if canImport(GoogleSignIn) && canImport(GoogleSignInSwift)
             GoogleSignInButton {
                 guard let root = UIApplication.shared.connectedScenes
                         .compactMap({ ($0 as? UIWindowScene)?.keyWindow })
@@ -49,6 +54,7 @@ struct LoginView: View {
             }
             .frame(height: 45)
             .padding(.horizontal)
+            #endif
         }
         .padding()
     }
