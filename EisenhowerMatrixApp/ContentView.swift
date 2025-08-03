@@ -223,7 +223,7 @@ class TaskManager: ObservableObject {
     }
 
     func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
-        let priorityTasks = tasksForPriority(priority)
+        let priorityTasks = activeTasksForPriority(priority)
         guard sourceIndex >= 0,
               sourceIndex < priorityTasks.count else { return }
 
@@ -233,8 +233,13 @@ class TaskManager: ObservableObject {
         let task = tasks.remove(at: sourceIndexInMain)
 
         if destinationIndex >= priorityTasks.count {
-            let lastIndex = tasks.lastIndex(where: { $0.priority == priority }) ?? tasks.count
-            tasks.insert(task, at: lastIndex)
+            if let lastActive = tasks.lastIndex(where: { $0.priority == priority && !$0.isCompleted }) {
+                tasks.insert(task, at: lastActive + 1)
+            } else if let lastPriority = tasks.lastIndex(where: { $0.priority == priority }) {
+                tasks.insert(task, at: lastPriority + 1)
+            } else {
+                tasks.append(task)
+            }
         } else {
             let destinationTask = priorityTasks[destinationIndex]
             if let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
@@ -272,7 +277,7 @@ struct TaskDropDelegate: DropDelegate {
               let draggedTask = taskManager.tasks.first(where: { $0.id == draggedId }) else { return }
 
         if draggedTask.priority == currentPriority {
-            let priorityTasks = taskManager.tasksForPriority(currentPriority)
+            let priorityTasks = taskManager.activeTasksForPriority(currentPriority)
             if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }),
                let toIndex = priorityTasks.firstIndex(where: { $0.id == task.id }) {
                 taskManager.reorderTasks(from: fromIndex, to: toIndex, in: currentPriority)
@@ -306,9 +311,9 @@ struct QuadrantDropDelegate: DropDelegate {
               let draggedTask = taskManager.tasks.first(where: { $0.id == draggedId }) else { return false }
 
         if draggedTask.priority == priority {
-            let priorityTasks = taskManager.tasksForPriority(priority)
+            let priorityTasks = taskManager.activeTasksForPriority(priority)
             if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }) {
-                taskManager.reorderTasks(from: fromIndex, to: max(priorityTasks.count - 1, 0), in: priority)
+                taskManager.reorderTasks(from: fromIndex, to: priorityTasks.count, in: priority)
             }
         } else {
             taskManager.moveTask(draggedTask, to: priority)
