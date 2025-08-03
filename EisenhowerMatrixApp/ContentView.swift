@@ -421,19 +421,11 @@ struct ContentView: View {
                                 .fontWeight(.medium)
                                 .strikethrough(task.isCompleted)
                                 .lineLimit(1)
-                                .onTapGesture {
-                                    selectedTask = task
-                                    showingTaskDetail = true
-                                }
 
                             Text(task.description)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
-                                .onTapGesture {
-                                    selectedTask = task
-                                    showingTaskDetail = true
-                                }
                         }
 
                         Spacer()
@@ -450,6 +442,11 @@ struct ContentView: View {
                                 .font(.caption)
                         }
                         .buttonStyle(PlainButtonStyle())
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedTask = task
+                        showingTaskDetail = true
                     }
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
