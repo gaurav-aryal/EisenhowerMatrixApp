@@ -1,4 +1,12 @@
 import SwiftUI
+import AuthenticationServices
+#if canImport(GoogleSignIn) && canImport(GoogleSignInSwift)
+import GoogleSignIn
+import GoogleSignInSwift
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct LoginView: View {
     @State private var username: String = ""
@@ -20,6 +28,33 @@ struct LoginView: View {
                 onLogin(trimmed)
             }
             .padding()
+
+            SignInWithAppleButton(.signIn) { request in
+                request.requestedScopes = [.fullName, .email]
+            } onCompletion: { result in
+                if case .success(let authResults) = result,
+                   let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
+                    onLogin(credential.user)
+                }
+            }
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 45)
+            .padding(.horizontal)
+
+            #if canImport(GoogleSignIn) && canImport(GoogleSignInSwift)
+            GoogleSignInButton {
+                guard let root = UIApplication.shared.connectedScenes
+                        .compactMap({ ($0 as? UIWindowScene)?.keyWindow })
+                        .first?.rootViewController else { return }
+                GIDSignIn.sharedInstance.signIn(withPresenting: root) { signInResult, error in
+                    guard error == nil, let result = signInResult else { return }
+                    let email = result.user.profile?.email ?? result.user.userID ?? ""
+                    onLogin(email)
+                }
+            }
+            .frame(height: 45)
+            .padding(.horizontal)
+            #endif
         }
         .padding()
     }
