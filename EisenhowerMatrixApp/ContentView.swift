@@ -494,7 +494,6 @@ struct ContentView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-            .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
 
             Spacer()
             
@@ -524,6 +523,7 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(color, lineWidth: 1)
         )
+        .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
     }
 }
 
