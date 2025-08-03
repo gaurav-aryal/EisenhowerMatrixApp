@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct TaskItem: Identifiable, Codable {
     let id: UUID
@@ -168,10 +169,57 @@ class TaskManager: ObservableObject {
     }
 }
 
-// MARK: - Drop View Delegate (Temporarily Disabled)
-// struct DropViewDelegate: DropDelegate {
-//     // Drag and drop functionality temporarily disabled to avoid Voice Shortcuts issues
-// }
+// MARK: - Drop Delegates
+struct TaskDropDelegate: DropDelegate {
+    let task: TaskItem
+    let taskManager: TaskManager
+    let currentPriority: TaskPriority
+    @Binding var draggedTaskId: UUID?
+
+    func dropEntered(_ info: DropInfo) {
+        guard let draggedId = draggedTaskId,
+              draggedId != task.id,
+              let draggedTask = taskManager.tasks.first(where: { $0.id == draggedId }) else { return }
+
+        if draggedTask.priority == currentPriority {
+            let priorityTasks = taskManager.tasksForPriority(currentPriority)
+            if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }),
+               let toIndex = priorityTasks.firstIndex(where: { $0.id == task.id }) {
+                taskManager.reorderTasks(from: fromIndex, to: toIndex, in: currentPriority)
+            }
+        } else {
+            taskManager.moveTask(draggedTask, to: currentPriority)
+        }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedTaskId = nil
+        return true
+    }
+}
+
+struct QuadrantDropDelegate: DropDelegate {
+    let priority: TaskPriority
+    let taskManager: TaskManager
+    @Binding var draggedTaskId: UUID?
+
+    func performDrop(info: DropInfo) -> Bool {
+        guard let draggedId = draggedTaskId,
+              let draggedTask = taskManager.tasks.first(where: { $0.id == draggedId }) else { return false }
+
+        if draggedTask.priority == priority {
+            let priorityTasks = taskManager.tasksForPriority(priority)
+            if let fromIndex = priorityTasks.firstIndex(where: { $0.id == draggedId }) {
+                taskManager.reorderTasks(from: fromIndex, to: priorityTasks.count - 1, in: priority)
+            }
+        } else {
+            taskManager.moveTask(draggedTask, to: priority)
+        }
+
+        draggedTaskId = nil
+        return true
+    }
+}
 
 // MARK: - Content View
 struct ContentView: View {
@@ -342,9 +390,13 @@ struct ContentView: View {
                         RoundedRectangle(cornerRadius: 4)
                             .stroke(color.opacity(0.3), lineWidth: 1)
                     )
-                    // Drag functionality temporarily disabled
+                    .onDrag {
+                        draggedTaskId = task.id
+                        return NSItemProvider(object: task.id.uuidString as NSString)
+                    }
+                    .onDrop(of: [UTType.text], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
                 }
-                
+
                 if tasks.count > 5 {
                     Text("More...")
                         .font(.caption)
@@ -352,7 +404,8 @@ struct ContentView: View {
                         .fontWeight(.medium)
                 }
             }
-            
+            .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
+
             Spacer()
             
             // Add button
@@ -381,7 +434,6 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(color, lineWidth: 1)
         )
-        // Drop functionality temporarily disabled
     }
 }
 
