@@ -482,8 +482,8 @@ struct ContentView: View {
 
                 if tasks.count > 5 {
                     Button(action: {
-                        selectedPriorityForAdd = priority
-                        showingAddTask = true
+                        selectedPriority = priority
+                        showingDetail = true
                     }) {
                         Text("More...")
                             .font(.caption)
