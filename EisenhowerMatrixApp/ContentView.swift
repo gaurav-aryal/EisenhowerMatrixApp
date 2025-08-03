@@ -609,6 +609,7 @@ struct PriorityDetailView: View {
                     }
                 }
                 .listStyle(PlainListStyle())
+                .scrollIndicators(.visible)
             }
             .navigationTitle(priority.rawValue)
             .toolbar {
