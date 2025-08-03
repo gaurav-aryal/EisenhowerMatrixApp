@@ -553,40 +553,44 @@ struct PriorityDetailView: View {
         let completedTasks = taskManager.completedTasksForPriority(priority)
 
         return NavigationView {
-            VStack(spacing: 0) {
+            List {
                 // Header
-                VStack(spacing: 12) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(priority.rawValue)
-                                .font(.title2)
-                                .fontWeight(.bold)
+                Section {
+                    VStack(spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(priority.rawValue)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
 
-                            Text(getSubtitle(for: priority))
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                Text(getSubtitle(for: priority))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
                         }
 
-                        Spacer()
-                    }
-                    
-                    HStack {
-                        Text("\(activeTasks.count) tasks")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        HStack {
+                            Text("\(activeTasks.count) tasks")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
 
-                        Spacer()
+                            Spacer()
 
-                        Text("\(completedTasks.count) completed")
-                            .font(.caption)
-                            .foregroundColor(.green)
+                            Text("\(completedTasks.count) completed")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
                     }
+                    .padding()
+                    .background(priority.color.opacity(0.1))
                 }
-                .padding()
-                .background(priority.color.opacity(0.1))
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
 
                 // Task List
-                List {
+                Section {
                     ForEach(activeTasks) { task in
                         TaskRowView(task: task, taskManager: taskManager)
                     }
@@ -604,10 +608,10 @@ struct PriorityDetailView: View {
                         }
                     }
                 }
-                .listStyle(PlainListStyle())
-                .scrollIndicators(.visible)
-                .environment(\.editMode, $editMode)
             }
+            .listStyle(PlainListStyle())
+            .scrollIndicators(.visible)
+            .environment(\.editMode, $editMode)
             .navigationTitle(priority.rawValue)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
