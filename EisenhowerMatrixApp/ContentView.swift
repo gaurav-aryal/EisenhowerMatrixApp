@@ -255,6 +255,10 @@ struct TaskDropDelegate: DropDelegate {
         }
     }
 
+    func dropUpdated(_ info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
     func performDrop(info: DropInfo) -> Bool {
         draggedTaskId = nil
         return true
@@ -265,6 +269,10 @@ struct QuadrantDropDelegate: DropDelegate {
     let priority: TaskPriority
     let taskManager: TaskManager
     @Binding var draggedTaskId: UUID?
+
+    func dropUpdated(_ info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
 
     func performDrop(info: DropInfo) -> Bool {
         guard let draggedId = draggedTaskId,
@@ -484,7 +492,6 @@ struct ContentView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-            .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
 
             Spacer()
             
@@ -514,6 +521,7 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(color, lineWidth: 1)
         )
+        .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
     }
 }
 
