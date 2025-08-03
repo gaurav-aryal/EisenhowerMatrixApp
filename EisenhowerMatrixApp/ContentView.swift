@@ -207,19 +207,29 @@ class TaskManager: ObservableObject {
 
     func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
         let priorityTasks = tasksForPriority(priority)
-        guard sourceIndex < priorityTasks.count && destinationIndex < priorityTasks.count else { return }
+        guard sourceIndex < priorityTasks.count else { return }
 
         let sourceTask = priorityTasks[sourceIndex]
-        let destinationTask = priorityTasks[destinationIndex]
 
         // Find the actual indices in the main tasks array
-        if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
-           let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
-            let task = tasks.remove(at: sourceIndexInMain)
+        guard let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }) else { return }
+        var destIndexInMain: Int?
+        if destinationIndex < priorityTasks.count {
+            let destinationTask = priorityTasks[destinationIndex]
+            destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id })
+        }
+
+        let task = tasks.remove(at: sourceIndexInMain)
+
+        // Destination within the same priority
+        if destinationIndex >= priorityTasks.count { // move to end
+            let lastIndex = tasks.lastIndex(where: { $0.priority == priority }) ?? (tasks.count - 1)
+            tasks.insert(task, at: lastIndex + 1)
+        } else if let destIndexInMain = destIndexInMain {
             let adjustedDestination = sourceIndexInMain < destIndexInMain ? destIndexInMain - 1 : destIndexInMain
             tasks.insert(task, at: adjustedDestination)
-            saveTasks()
         }
+        saveTasks()
     }
 
     func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskPriority) {
@@ -602,6 +612,7 @@ struct PriorityDetailView: View {
                         TaskRowView(task: task, taskManager: taskManager)
                     }
                     .onDelete(perform: deleteActiveTasks)
+                    .onMove(perform: moveTasks)
 
                     if !completedTasks.isEmpty {
                         DisclosureGroup(isExpanded: $showCompleted) {
@@ -622,14 +633,12 @@ struct PriorityDetailView: View {
                     Button("Done") { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Add Task") {
-                        showingAddTask = true
+                    Button(action: { showingAddTask = true }) {
+                        Image(systemName: "plus")
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Edit") {
-                        // Enable edit mode for reordering
-                    }
+                    EditButton()
                 }
             }
         }
@@ -666,12 +675,8 @@ struct PriorityDetailView: View {
     }
     
     private func moveTasks(from source: IndexSet, to destination: Int) {
-        // Simple reordering within the same priority
-        let priorityTasks = taskManager.tasksForPriority(priority)
-        guard let sourceIndex = source.first, sourceIndex < priorityTasks.count else { return }
-        
-        // For now, just log the move operation
-        print("Moving task from index \(sourceIndex) to destination \(destination)")
+        guard let sourceIndex = source.first else { return }
+        taskManager.reorderTasks(from: sourceIndex, to: destination, in: priority)
     }
 }
 
