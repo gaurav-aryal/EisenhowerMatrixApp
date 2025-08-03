@@ -455,7 +455,7 @@ struct ContentView: View {
                         draggedTaskId = task.id
                         return NSItemProvider(object: task.id.uuidString as NSString)
                     }
-                    .onDrop(of: [UTType.text], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
+                    .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
                 }
 
                 HStack {
@@ -490,7 +490,7 @@ struct ContentView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-            .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
+            .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
             Spacer()
         }
         .padding(8)
@@ -500,7 +500,7 @@ struct ContentView: View {
             Rectangle()
                 .stroke(color, lineWidth: 1)
         )
-        .onDrop(of: [UTType.text], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
+        .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
     }
 }
 
