@@ -923,9 +923,6 @@ struct TaskDetailView: View {
     }
 }
 
-extension TaskPriority: Identifiable {
-    var id: String { rawValue }
-}
 
 #Preview {
     ContentView(taskManager: TaskManager(userId: "preview"))
