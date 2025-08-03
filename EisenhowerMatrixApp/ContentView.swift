@@ -330,33 +330,29 @@ struct ContentView: View {
                 .padding()
                 
                 // Matrix Grid
-                VStack(spacing: 0) {
-                    // Top section: Urgent quadrants
-                    HStack(spacing: 12) {
-                        matrixQuadrant(priority: .urgentImportant, color: .red)
-                        matrixQuadrant(priority: .urgentNotImportant, color: .orange)
-                    }
-                    .padding(.horizontal)
-                    .padding(.top)
-                    
-                    // Center section with proper spacing
-                    Spacer()
-                        .frame(height: 120)
-                    
-                    // Bottom section: Not Urgent quadrants (truly centered)
-                    HStack {
-                        Spacer()
-                        HStack(spacing: 12) {
-                            matrixQuadrant(priority: .notUrgentImportant, color: .blue)
-                            matrixQuadrant(priority: .notUrgentNotImportant, color: .gray)
+                GeometryReader { geometry in
+                    ZStack {
+                        VStack(spacing: 0) {
+                            HStack(spacing: 0) {
+                                matrixQuadrant(priority: .urgentImportant, color: .red)
+                                matrixQuadrant(priority: .urgentNotImportant, color: .orange)
+                            }
+                            HStack(spacing: 0) {
+                                matrixQuadrant(priority: .notUrgentImportant, color: .blue)
+                                matrixQuadrant(priority: .notUrgentNotImportant, color: .gray)
+                            }
                         }
-                    Spacer()
+                        Path { path in
+                            let width = geometry.size.width
+                            let height = geometry.size.height
+                            path.move(to: CGPoint(x: width / 2, y: 0))
+                            path.addLine(to: CGPoint(x: width / 2, y: height))
+                            path.move(to: CGPoint(x: 0, y: height / 2))
+                            path.addLine(to: CGPoint(x: width, y: height / 2))
+                        }
+                        .stroke(Color.primary, lineWidth: 2)
+                    }
                 }
-                .padding(.horizontal)
-
-                // Bottom spacing
-                Spacer()
-                    .frame(height: 120)
             }
 
             Spacer()
@@ -507,11 +503,10 @@ struct ContentView: View {
             Spacer()
         }
         .padding(8)
-        .frame(width: 180, height: 220)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(color.opacity(0.1))
-        .cornerRadius(12)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            Rectangle()
                 .stroke(color, lineWidth: 1)
         )
     }
