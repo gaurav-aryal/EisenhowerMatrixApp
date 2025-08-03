@@ -223,7 +223,7 @@ class TaskManager: ObservableObject {
     }
 
     func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
-        var priorityTasks = tasksForPriority(priority)
+        let priorityTasks = tasksForPriority(priority)
         guard sourceIndex >= 0,
               sourceIndex < priorityTasks.count else { return }
 
@@ -546,7 +546,9 @@ struct PriorityDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddTask = false
     @State private var showCompleted = false
+    #if os(iOS)
     @State private var editMode: EditMode = .inactive
+    #endif
     @Binding var draggedTaskId: UUID?
 
     var body: some View {
@@ -612,7 +614,9 @@ struct PriorityDetailView: View {
             }
             .listStyle(PlainListStyle())
             .scrollIndicators(.visible)
+#if os(iOS)
             .environment(\.editMode, $editMode)
+#endif
             .navigationTitle(priority.rawValue)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
