@@ -51,11 +51,13 @@ struct TaskItem: Identifiable, Codable {
     
 }
 
-enum TaskPriority: String, CaseIterable, Codable {
+enum TaskPriority: String, CaseIterable, Codable, Identifiable {
     case urgentImportant = "Urgent & Important"
     case urgentNotImportant = "Urgent & Not Important"
     case notUrgentImportant = "Not Urgent & Important"
     case notUrgentNotImportant = "Not Urgent & Not Important"
+
+    var id: String { rawValue }
     
     var color: SwiftUI.Color {
         switch self {
@@ -286,7 +288,6 @@ struct ContentView: View {
     @State private var selectedPriority: TaskPriority?
     @State private var selectedPriorityForAdd: TaskPriority?
     @State private var selectedTask: TaskItem?
-    @State private var showingDetail = false
     @State private var showingAddTask = false
     @State private var showingTaskDetail = false
     @State private var isDragging = false
@@ -359,10 +360,8 @@ struct ContentView: View {
         .sheet(isPresented: $showingAddTask) {
             AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
         }
-        .sheet(isPresented: $showingDetail) {
-            if let priority = selectedPriority {
-                PriorityDetailView(taskManager: taskManager, priority: priority)
-            }
+        .sheet(item: $selectedPriority) { priority in
+            PriorityDetailView(taskManager: taskManager, priority: priority)
         }
         .sheet(isPresented: $showingTaskDetail) {
             if let task = selectedTask {
@@ -387,7 +386,6 @@ struct ContentView: View {
                         .minimumScaleFactor(0.8)
                         .onTapGesture {
                             selectedPriority = priority
-                            showingDetail = true
                         }
 
                     Spacer()
@@ -462,7 +460,6 @@ struct ContentView: View {
                     if tasks.count > 5 {
                         Button(action: {
                             selectedPriority = priority
-                            showingDetail = true
                         }) {
                             Text("More...")
                                 .font(.caption)
