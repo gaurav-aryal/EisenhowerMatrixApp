@@ -223,20 +223,28 @@ class TaskManager: ObservableObject {
     }
 
     func reorderTasks(from sourceIndex: Int, to destinationIndex: Int, in priority: TaskPriority) {
-        let priorityTasks = tasksForPriority(priority)
-        guard sourceIndex >= 0, destinationIndex >= 0,
-              sourceIndex < priorityTasks.count,
-              destinationIndex < priorityTasks.count else { return }
+        var priorityTasks = tasksForPriority(priority)
+        guard sourceIndex >= 0,
+              sourceIndex < priorityTasks.count else { return }
 
         let sourceTask = priorityTasks[sourceIndex]
-        let destinationTask = priorityTasks[destinationIndex]
+        guard let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }) else { return }
 
-        if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
-           let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
-            let task = tasks.remove(at: sourceIndexInMain)
-            let adjustedDestination = sourceIndexInMain < destIndexInMain ? destIndexInMain - 1 : destIndexInMain
-            tasks.insert(task, at: adjustedDestination)
+        let task = tasks.remove(at: sourceIndexInMain)
+
+        if destinationIndex >= priorityTasks.count {
+            let lastIndex = tasks.lastIndex(where: { $0.priority == priority }) ?? tasks.count
+            tasks.insert(task, at: lastIndex)
+        } else {
+            let destinationTask = priorityTasks[destinationIndex]
+            if let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
+                let adjustedDestination = sourceIndexInMain < destIndexInMain ? destIndexInMain - 1 : destIndexInMain
+                tasks.insert(task, at: adjustedDestination)
+            } else {
+                tasks.insert(task, at: sourceIndexInMain)
+            }
         }
+
         saveTasks()
     }
 
@@ -538,6 +546,7 @@ struct PriorityDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddTask = false
     @State private var showCompleted = false
+    @State private var editMode: EditMode = .inactive
 
     var body: some View {
         let activeTasks = taskManager.activeTasksForPriority(priority)
@@ -597,6 +606,7 @@ struct PriorityDetailView: View {
                 }
                 .listStyle(PlainListStyle())
                 .scrollIndicators(.visible)
+                .environment(\.editMode, $editMode)
             }
             .navigationTitle(priority.rawValue)
             .toolbar {
@@ -609,9 +619,7 @@ struct PriorityDetailView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Edit") {
-                        // Edit mode functionality
-                    }
+                    EditButton()
                 }
             }
         }
