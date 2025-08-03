@@ -79,6 +79,26 @@ enum TaskPriority: String, CaseIterable, Codable {
     }
 }
 
+// MARK: - App Appearance
+enum BackgroundMode: String, CaseIterable, Identifiable {
+    case dark = "Dark"
+    case gray = "Gray"
+    case white = "White"
+
+    var id: String { rawValue }
+
+    var color: Color {
+        switch self {
+        case .dark:
+            return .black
+        case .gray:
+            return .gray
+        case .white:
+            return .white
+        }
+    }
+}
+
 // MARK: - Data Manager
 class TaskManager: ObservableObject {
     @Published var tasks: [TaskItem] = []
@@ -184,6 +204,7 @@ struct ContentView: View {
     @State private var showingTaskDetail = false
     @State private var isDragging = false
     @State private var draggedTaskId: UUID?
+    @State private var backgroundMode: BackgroundMode = .gray
     
     var body: some View {
         NavigationView {
@@ -208,6 +229,14 @@ struct ContentView: View {
                     .cornerRadius(8)
                 }
                 .padding()
+
+                Picker("Background", selection: $backgroundMode) {
+                    ForEach(BackgroundMode.allCases) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
                 
                 // Matrix Grid
                 VStack(spacing: 0) {
@@ -230,21 +259,23 @@ struct ContentView: View {
                             matrixQuadrant(priority: .notUrgentImportant, color: .blue)
                             matrixQuadrant(priority: .notUrgentNotImportant, color: .gray)
                         }
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    
-                    // Bottom spacing
                     Spacer()
-                        .frame(height: 120)
                 }
-                
+                .padding(.horizontal)
+
+                // Bottom spacing
                 Spacer()
+                    .frame(height: 120)
             }
+
+            Spacer()
         }
-        .sheet(isPresented: $showingAddTask) {
-            AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
-        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(backgroundMode.color.ignoresSafeArea())
+    }
+    .sheet(isPresented: $showingAddTask) {
+        AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
+    }
         .sheet(isPresented: $showingDetail) {
             if let priority = selectedPriority {
                 PriorityDetailView(taskManager: taskManager, priority: priority)
