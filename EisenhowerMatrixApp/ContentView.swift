@@ -295,7 +295,7 @@ struct ContentView: View {
     @State private var showingTaskDetail = false
     @State private var isDragging = false
     @State private var draggedTaskId: UUID?
-    @State private var backgroundMode: BackgroundMode = .gray
+    @State private var backgroundMode: BackgroundMode = .white
     
     var body: some View {
         NavigationView {
@@ -364,6 +364,7 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(backgroundMode.color.ignoresSafeArea())
     }
+    .preferredColorScheme(backgroundMode == .white ? .light : .dark)
     .sheet(isPresented: $showingAddTask) {
         AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
     }
