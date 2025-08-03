@@ -346,10 +346,16 @@ struct ContentView: View {
                 }
                 
                 if tasks.count > 5 {
-                    Text("More...")
-                        .font(.caption)
-                        .foregroundColor(color)
-                        .fontWeight(.medium)
+                    Button(action: {
+                        selectedPriorityForAdd = priority
+                        showingAddTask = true
+                    }) {
+                        Text("More...")
+                            .font(.caption)
+                            .foregroundColor(color)
+                            .fontWeight(.medium)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             
