@@ -414,102 +414,91 @@ struct ContentView: View {
                 }
             }
             
-            // Task list - individual tasks clickable
-            VStack(alignment: .leading, spacing: 3) {
-                ForEach(tasks.prefix(5)) { task in
-                    HStack(spacing: 6) {
-                        Button(action: {
-                            taskManager.toggleTask(task)
-                        }) {
-                            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(task.isCompleted ? .green : color)
-                                .font(.caption)
-                        }
-                        .buttonStyle(PlainButtonStyle())
+            // Task list - individual tasks scrollable
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(tasks) { task in
+                        HStack(spacing: 6) {
+                            Button(action: {
+                                taskManager.toggleTask(task)
+                            }) {
+                                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(task.isCompleted ? .green : color)
+                                    .font(.caption)
+                            }
+                            .buttonStyle(PlainButtonStyle())
 
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(task.title)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .strikethrough(task.isCompleted)
-                                .lineLimit(1)
-                                .onTapGesture {
-                                    selectedTask = task
-                                    showingTaskDetail = true
-                                }
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(task.title)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .strikethrough(task.isCompleted)
+                                    .lineLimit(1)
+                                    .onTapGesture {
+                                        selectedTask = task
+                                        showingTaskDetail = true
+                                    }
 
-                            Text(task.description)
+                                Text(task.description)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                                    .onTapGesture {
+                                        selectedTask = task
+                                        showingTaskDetail = true
+                                    }
+                            }
+
+                            Spacer()
+
+                            // Drag handle indicator
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundColor(color.opacity(0.6))
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                                .onTapGesture {
-                                    selectedTask = task
-                                    showingTaskDetail = true
-                                }
+
+                            Button(action: {
+                                taskManager.deleteTask(task)
+                            }) {
+                                Text("🗑️")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
-
-                        Spacer()
-
-                        // Drag handle indicator
-                        Image(systemName: "line.3.horizontal")
-                            .foregroundColor(color.opacity(0.6))
-                            .font(.caption2)
-
-                        Button(action: {
-                            taskManager.deleteTask(task)
-                        }) {
-                            Text("🗑️")
-                                .font(.caption)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(color.opacity(0.3), lineWidth: 1)
+                        )
+                        .onDrag {
+                            draggedTaskId = task.id
+                            return NSItemProvider(object: task.id.uuidString as NSString)
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
                     }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(color.opacity(0.3), lineWidth: 1)
-                    )
-                    .onDrag {
-                        draggedTaskId = task.id
-                        return NSItemProvider(object: task.id.uuidString as NSString)
-                    }
-                    .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
-                }
-
-                HStack {
-                    if tasks.count > 5 {
-                        Button(action: {
-                            selectedPriority = priority
-                        }) {
-                            Text("More...")
-                                .font(.caption)
-                                .foregroundColor(color)
-                                .fontWeight(.medium)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-
-                    Spacer()
-
-                    Button(action: {
-                        selectedPriorityForAdd = priority
-                        showingAddTask = true
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundColor(color)
-                                .font(.caption)
-                            Text("Add Task")
-                                .font(.caption)
-                                .foregroundColor(color)
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
+
+            HStack {
+                Spacer()
+                Button(action: {
+                    selectedPriorityForAdd = priority
+                    showingAddTask = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(color)
+                            .font(.caption)
+                        Text("Add Task")
+                            .font(.caption)
+                            .foregroundColor(color)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
             Spacer()
         }
         .padding(8)
