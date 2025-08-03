@@ -301,7 +301,7 @@ struct ContentView: View {
                     Text("Eisenhower Matrix")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                    
+
                     HStack {
                         Image(systemName: "hand.draw")
                             .foregroundColor(.blue)
@@ -324,7 +324,7 @@ struct ContentView: View {
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding()
-                
+
                 // Matrix Grid
                 GeometryReader { geometry in
                     ZStack {
@@ -349,17 +349,16 @@ struct ContentView: View {
                         .stroke(Color.primary, lineWidth: 2)
                     }
                 }
-            }
 
-            Spacer()
+                Spacer()
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(backgroundMode.color.ignoresSafeArea())
-    }
-    .preferredColorScheme(backgroundMode == .white ? .light : .dark)
-    .sheet(isPresented: $showingAddTask) {
-        AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
-    }
+        .preferredColorScheme(backgroundMode == .white ? .light : .dark)
+        .sheet(isPresented: $showingAddTask) {
+            AddTaskView(taskManager: taskManager, priority: selectedPriorityForAdd ?? .urgentImportant)
+        }
         .sheet(isPresented: $showingDetail) {
             if let priority = selectedPriority {
                 PriorityDetailView(taskManager: taskManager, priority: priority)
@@ -476,8 +475,8 @@ struct ContentView: View {
                     Spacer()
 
                     Button(action: {
-                        selectedPriority = priority
-                        showingDetail = true
+                        selectedPriorityForAdd = priority
+                        showingAddTask = true
                     }) {
                         HStack {
                             Image(systemName: "plus.circle.fill")
