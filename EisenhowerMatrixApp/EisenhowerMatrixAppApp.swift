@@ -9,17 +9,9 @@ import SwiftUI
 
 @main
 struct EisenhowerMatrixAppApp: App {
-    @State private var currentUser: String?
-
     var body: some Scene {
         WindowGroup {
-            if let user = currentUser {
-                ContentView(taskManager: TaskManager(userId: user))
-            } else {
-                LoginView { username in
-                    currentUser = username
-                }
-            }
+            ContentView(taskManager: TaskManager(userId: "default"))
         }
     }
 }

@@ -229,6 +229,7 @@ class TaskManager: ObservableObject {
               destinationIndex < priorityTasks.count else { return }
 
         let sourceTask = priorityTasks[sourceIndex]
+        let destinationTask = priorityTasks[destinationIndex]
 
         if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
            let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
@@ -489,7 +490,12 @@ struct ContentView: View {
                         draggedTaskId = task.id
                         return NSItemProvider(object: task.id.uuidString as NSString)
                     }
-                    .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
+                    .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(
+                        task: task, 
+                        taskManager: taskManager, 
+                        currentPriority: priority, 
+                        draggedTaskId: $draggedTaskId
+                    ))
                 }
 
                 HStack {
@@ -502,11 +508,19 @@ struct ContentView: View {
                                 .foregroundColor(color)
                                 .fontWeight(.medium)
                         }
-                        .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(task: task, taskManager: taskManager, currentPriority: priority, draggedTaskId: $draggedTaskId))
+                        .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
+                            priority: priority, 
+                            taskManager: taskManager, 
+                            draggedTaskId: $draggedTaskId
+                        ))
                     }
                 }
             }
-            .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
+            .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
+                priority: priority, 
+                taskManager: taskManager, 
+                draggedTaskId: $draggedTaskId
+            ))
 
             HStack {
                 Spacer()
@@ -534,7 +548,11 @@ struct ContentView: View {
             Rectangle()
                 .stroke(color, lineWidth: 1)
         )
-        .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(priority: priority, taskManager: taskManager, draggedTaskId: $draggedTaskId))
+        .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
+            priority: priority, 
+            taskManager: taskManager, 
+            draggedTaskId: $draggedTaskId
+        ))
     }
 }
 
@@ -664,7 +682,9 @@ struct PriorityDetailView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    EditButton()
+                    Button("Edit") {
+                        // Edit mode functionality
+                    }
                 }
             }
         }
