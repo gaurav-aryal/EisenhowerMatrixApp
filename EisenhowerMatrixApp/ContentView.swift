@@ -77,6 +77,20 @@ enum TaskPriority: String, CaseIterable, Codable {
             return "🗑️"
         }
     }
+
+    /// Readable title split across lines for compact quadrant headers
+    var displayTitle: String {
+        switch self {
+        case .urgentImportant:
+            return "Urgent &\nImportant"
+        case .urgentNotImportant:
+            return "Urgent &\nNot Important"
+        case .notUrgentImportant:
+            return "Not Urgent &\nImportant"
+        case .notUrgentNotImportant:
+            return "Not Urgent &\nNot Important"
+        }
+    }
 }
 
 // MARK: - Data Manager
@@ -267,13 +281,13 @@ struct ContentView: View {
                     Image(systemName: priority.icon)
                         .foregroundColor(color)
                         .font(.title3)
-                    
-                    Text(priority.rawValue)
+
+                    Text(priority.displayTitle)
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(color)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(3)
+                        .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .minimumScaleFactor(0.8)
                         .onTapGesture {
