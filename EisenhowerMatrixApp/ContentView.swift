@@ -331,19 +331,6 @@ struct ContentView: View {
                     Text("Eisenhower Matrix")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-
-                    HStack {
-                        Image(systemName: "hand.draw")
-                            .foregroundColor(.blue)
-                            .font(.caption)
-                        Text("Drag tasks between quadrants to change priority")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(8)
                 }
                 .padding()
 
