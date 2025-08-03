@@ -66,19 +66,6 @@ enum TaskPriority: String, CaseIterable, Codable {
         }
     }
     
-    var icon: String {
-        switch self {
-        case .urgentImportant:
-            return "exclamationmark.triangle.fill"
-        case .urgentNotImportant:
-            return "⏰"
-        case .notUrgentImportant:
-            return "star.fill"
-        case .notUrgentNotImportant:
-            return "🗑️"
-        }
-    }
-
     /// Readable title split across lines for compact quadrant headers
     var displayTitle: String {
         switch self {
@@ -392,12 +379,6 @@ struct ContentView: View {
             // Header with title - clickable to open full list
             VStack(spacing: 4) {
                 HStack {
-                    Spacer()
-
-                    Image(systemName: priority.icon)
-                        .foregroundColor(color)
-                        .font(.title3)
-
                     Text(priority.displayTitle)
                         .font(.caption2)
                         .fontWeight(.bold)
@@ -542,13 +523,9 @@ struct AddTaskView: View {
                 }
                 
                 Section(header: Text("Priority")) {
-                    HStack {
-                        Image(systemName: priority.icon)
-                            .foregroundColor(priority.color)
-                        Text(priority.rawValue)
-                            .foregroundColor(priority.color)
-                            .fontWeight(.semibold)
-                    }
+                    Text(priority.rawValue)
+                        .foregroundColor(priority.color)
+                        .fontWeight(.semibold)
                 }
             }
             .navigationTitle("Add Task")
@@ -581,20 +558,16 @@ struct PriorityDetailView: View {
                 // Header
                 VStack(spacing: 12) {
                     HStack {
-                        Image(systemName: priority.icon)
-                            .font(.title)
-                            .foregroundColor(priority.color)
-                        
                         VStack(alignment: .leading, spacing: 4) {
                             Text(priority.rawValue)
                                 .font(.title2)
                                 .fontWeight(.bold)
-                            
+
                             Text(getSubtitle(for: priority))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
                     }
                     
@@ -787,13 +760,9 @@ struct EditTaskView: View {
                 Section(header: Text("Priority")) {
                     Picker("Priority", selection: $priority) {
                         ForEach(TaskPriority.allCases, id: \.self) { priority in
-                            HStack {
-                                Image(systemName: priority.icon)
-                                    .foregroundColor(priority.color)
-                                Text(priority.rawValue)
-                                    .foregroundColor(priority.color)
-                            }
-                            .tag(priority)
+                            Text(priority.rawValue)
+                                .foregroundColor(priority.color)
+                                .tag(priority)
                         }
                     }
                     .pickerStyle(MenuPickerStyle())
@@ -829,20 +798,16 @@ struct TaskDetailView: View {
                 // Task Header
                 VStack(spacing: 12) {
                     HStack {
-                        Image(systemName: task.priority.icon)
-                            .font(.title)
-                            .foregroundColor(task.priority.color)
-                        
                         VStack(alignment: .leading, spacing: 4) {
                             Text(task.priority.rawValue)
                                 .font(.headline)
                                 .foregroundColor(task.priority.color)
-                            
+
                             Text(getSubtitle(for: task.priority))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
                     }
                     
