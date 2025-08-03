@@ -425,77 +425,16 @@ struct ContentView: View {
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 3) {
                     ForEach(tasks) { task in
-                        HStack(spacing: 6) {
-                            Button(action: {
-                                taskManager.toggleTask(task)
-                            }) {
-                                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(task.isCompleted ? .green : color)
-                                    .font(.caption)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(task.title)
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .strikethrough(task.isCompleted)
-                                    .lineLimit(1)
-                                    .onTapGesture {
-                                        selectedTask = task
-                                        showingTaskDetail = true
-                                    }
-
-                                Text(task.description)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                                    .onTapGesture {
-                                        selectedTask = task
-                                        showingTaskDetail = true
-                                    }
-                            }
-
-                            Spacer()
-
-                            // Drag handle indicator
-                            Image(systemName: "line.3.horizontal")
-                                .foregroundColor(color.opacity(0.6))
-                                .font(.caption2)
-
-                            Button(action: {
-                                taskManager.deleteTask(task)
-                            }) {
-                                Text("🗑️")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                        TaskRowInQuadrant(
+                            task: task,
+                            taskManager: taskManager,
+                            priority: priority,
+                            color: color,
+                            selectedTask: $selectedTask,
+                            showingTaskDetail: $showingTaskDetail,
+                            draggedTaskId: $draggedTaskId
+                        )
                     }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selectedTask = task
-                        showingTaskDetail = true
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(color.opacity(0.3), lineWidth: 1)
-                    )
-                    .onDrag {
-                        draggedTaskId = task.id
-                        return NSItemProvider(object: task.id.uuidString as NSString)
-                    }
-                    .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(
-                        task: task, 
-                        taskManager: taskManager, 
-                        currentPriority: priority, 
-                        draggedTaskId: $draggedTaskId
-                    ))
                 }
 
                 HStack {
@@ -995,6 +934,89 @@ struct TaskDetailView: View {
     }
 }
 
+// MARK: - Task Row In Quadrant
+struct TaskRowInQuadrant: View {
+    let task: TaskItem
+    let taskManager: TaskManager
+    let priority: TaskPriority
+    let color: Color
+    @Binding var selectedTask: TaskItem?
+    @Binding var showingTaskDetail: Bool
+    @Binding var draggedTaskId: UUID?
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: {
+                taskManager.toggleTask(task)
+            }) {
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(task.isCompleted ? .green : color)
+                    .font(.caption)
+            }
+            .buttonStyle(PlainButtonStyle())
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(task.title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .strikethrough(task.isCompleted)
+                    .lineLimit(1)
+                    .onTapGesture {
+                        selectedTask = task
+                        showingTaskDetail = true
+                    }
+
+                Text(task.description)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .onTapGesture {
+                        selectedTask = task
+                        showingTaskDetail = true
+                    }
+            }
+
+            Spacer()
+
+            // Drag handle indicator
+            Image(systemName: "line.3.horizontal")
+                .foregroundColor(color.opacity(0.6))
+                .font(.caption2)
+
+            Button(action: {
+                taskManager.deleteTask(task)
+            }) {
+                Text("🗑️")
+                    .font(.caption)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedTask = task
+            showingTaskDetail = true
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(color.opacity(0.3), lineWidth: 1)
+        )
+        .onDrag {
+            draggedTaskId = task.id
+            return NSItemProvider(object: task.id.uuidString as NSString)
+        }
+        .onDrop(of: [UTType.plainText], delegate: TaskDropDelegate(
+            task: task, 
+            taskManager: taskManager, 
+            currentPriority: priority, 
+            draggedTaskId: $draggedTaskId
+        ))
+    }
+}
 
 #Preview {
     ContentView(taskManager: TaskManager(userId: "preview"))
