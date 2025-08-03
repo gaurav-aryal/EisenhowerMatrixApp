@@ -618,9 +618,6 @@ struct PriorityDetailView: View {
                         Image(systemName: "plus")
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    EditButton()
-                }
             }
         }
         .sheet(isPresented: $showingAddTask) {
@@ -730,7 +727,7 @@ struct TaskRowView: View {
             }) {
                 Image(systemName: "pencil")
                     .foregroundColor(.blue)
-                    .font(.caption)
+                    .font(.title3)
             }
             .buttonStyle(PlainButtonStyle())
             if let due = task.dueDate {
