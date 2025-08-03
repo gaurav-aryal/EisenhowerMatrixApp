@@ -16,12 +16,14 @@ struct TaskItem: Identifiable, Codable {
     var priority: TaskPriority
     var isCompleted: Bool = false
     var dateCreated: Date = Date()
-    
-    init(title: String, description: String, priority: TaskPriority) {
+    var dueDate: Date?
+
+    init(title: String, description: String, priority: TaskPriority, dueDate: Date? = nil) {
         self.id = UUID()
         self.title = title
         self.description = description
         self.priority = priority
+        self.dueDate = dueDate
     }
     
     init(from decoder: Decoder) throws {
@@ -32,8 +34,9 @@ struct TaskItem: Identifiable, Codable {
         self.priority = try container.decode(TaskPriority.self, forKey: .priority)
         self.isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
         self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
+        self.dueDate = try container.decodeIfPresent(Date.self, forKey: .dueDate)
     }
-    
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
@@ -42,11 +45,12 @@ struct TaskItem: Identifiable, Codable {
         try container.encode(priority, forKey: .priority)
         try container.encode(isCompleted, forKey: .isCompleted)
         try container.encode(dateCreated, forKey: .dateCreated)
+        try container.encodeIfPresent(dueDate, forKey: .dueDate)
     }
-    
+
     // Custom coding keys to handle UUID
     private enum CodingKeys: String, CodingKey {
-        case id, title, description, priority, isCompleted, dateCreated
+        case id, title, description, priority, isCompleted, dateCreated, dueDate
     }
     
 }
@@ -134,11 +138,12 @@ class TaskManager: ObservableObject {
         try? data.write(to: url)
     }
 
-    func addTask(title: String, description: String, priority: TaskPriority) {
+    func addTask(title: String, description: String, priority: TaskPriority, dueDate: Date? = nil) {
         let newTask = TaskItem(
             title: title,
             description: description,
-            priority: priority
+            priority: priority,
+            dueDate: dueDate
         )
         tasks.append(newTask)
         saveTasks()
@@ -234,11 +239,12 @@ class TaskManager: ObservableObject {
         saveTasks()
     }
 
-    func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskPriority) {
+    func updateTask(_ task: TaskItem, title: String, description: String, priority: TaskPriority, dueDate: Date?) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].title = title
             tasks[index].description = description
             tasks[index].priority = priority
+            tasks[index].dueDate = dueDate
             saveTasks()
         }
     }
@@ -537,10 +543,12 @@ struct AddTaskView: View {
     @ObservedObject var taskManager: TaskManager
     let priority: TaskPriority
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var title = ""
     @State private var description = ""
-    
+    @State private var hasDueDate = false
+    @State private var dueDate = Date()
+
     var body: some View {
         NavigationView {
             Form {
@@ -548,7 +556,14 @@ struct AddTaskView: View {
                     TextField("Task title", text: $title)
                     TextField("Description", text: $description)
                 }
-                
+
+                Section(header: Text("Due Date")) {
+                    Toggle("Set Due Date", isOn: $hasDueDate.animation())
+                    if hasDueDate {
+                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                    }
+                }
+
                 Section(header: Text("Priority")) {
                     Text(priority.rawValue)
                         .foregroundColor(priority.color)
@@ -562,7 +577,7 @@ struct AddTaskView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        taskManager.addTask(title: title, description: description, priority: priority)
+                        taskManager.addTask(title: title, description: description, priority: priority, dueDate: hasDueDate ? dueDate : nil)
                         dismiss()
                     }
                     .disabled(title.isEmpty)
@@ -722,7 +737,7 @@ struct TaskRowView: View {
                         .font(.body)
                         .fontWeight(.medium)
                         .onSubmit {
-                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority)
+                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority, dueDate: task.dueDate)
                             isEditing = false
                         }
                     
@@ -730,7 +745,7 @@ struct TaskRowView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .onSubmit {
-                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority)
+                            taskManager.updateTask(task, title: editedTitle, description: editedDescription, priority: task.priority, dueDate: task.dueDate)
                             isEditing = false
                         }
                 } else {
@@ -763,10 +778,15 @@ struct TaskRowView: View {
                     .font(.caption)
             }
             .buttonStyle(PlainButtonStyle())
-            
-            Text(task.dateCreated, style: .date)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+            if let due = task.dueDate {
+                Text(due, style: .date)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            } else {
+                Text(task.dateCreated, style: .date)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding(.vertical, 4)
         .sheet(isPresented: $showingEditTask) {
@@ -780,17 +800,21 @@ struct EditTaskView: View {
     @ObservedObject var taskManager: TaskManager
     let task: TaskItem
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var title: String
     @State private var description: String
     @State private var priority: TaskPriority
-    
+    @State private var hasDueDate: Bool
+    @State private var dueDate: Date
+
     init(taskManager: TaskManager, task: TaskItem) {
         self.taskManager = taskManager
         self.task = task
         self._title = State(initialValue: task.title)
         self._description = State(initialValue: task.description)
         self._priority = State(initialValue: task.priority)
+        self._hasDueDate = State(initialValue: task.dueDate != nil)
+        self._dueDate = State(initialValue: task.dueDate ?? Date())
     }
     
     var body: some View {
@@ -800,7 +824,14 @@ struct EditTaskView: View {
                     TextField("Task title", text: $title)
                     TextField("Description", text: $description)
                 }
-                
+
+                Section(header: Text("Due Date")) {
+                    Toggle("Set Due Date", isOn: $hasDueDate.animation())
+                    if hasDueDate {
+                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                    }
+                }
+
                 Section(header: Text("Priority")) {
                     Picker("Priority", selection: $priority) {
                         ForEach(TaskPriority.allCases, id: \.self) { priority in
@@ -819,7 +850,7 @@ struct EditTaskView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        taskManager.updateTask(task, title: title, description: description, priority: priority)
+                        taskManager.updateTask(task, title: title, description: description, priority: priority, dueDate: hasDueDate ? dueDate : nil)
                         dismiss()
                     }
                     .disabled(title.isEmpty)
@@ -859,9 +890,14 @@ struct TaskDetailView: View {
                         Text("Created: \(task.dateCreated, style: .date)")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+                        if let due = task.dueDate {
+                            Text("Due: \(due, style: .date)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
                         Spacer()
-                        
+
                         Button(action: {
                             taskManager.toggleTask(task)
                         }) {
