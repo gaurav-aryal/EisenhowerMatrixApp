@@ -186,6 +186,16 @@ class TaskManager: ObservableObject {
         return tasks.filter { $0.priority == priority }
     }
 
+    /// Returns only tasks that are not marked as completed for the given priority.
+    func activeTasksForPriority(_ priority: TaskPriority) -> [TaskItem] {
+        return tasks.filter { $0.priority == priority && !$0.isCompleted }
+    }
+
+    /// Returns only tasks that are completed for the given priority.
+    func completedTasksForPriority(_ priority: TaskPriority) -> [TaskItem] {
+        return tasks.filter { $0.priority == priority && $0.isCompleted }
+    }
+
     func moveTask(_ task: TaskItem, to newPriority: TaskPriority) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].priority = newPriority
@@ -372,7 +382,7 @@ struct ContentView: View {
     }
     
     private func matrixQuadrant(priority: TaskPriority, color: Color) -> some View {
-        let tasks = taskManager.tasksForPriority(priority)
+        let tasks = taskManager.activeTasksForPriority(priority)
         
         return VStack(spacing: 6) {
             // Header with title - clickable to open full list
@@ -550,9 +560,13 @@ struct PriorityDetailView: View {
     let priority: TaskPriority
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddTask = false
-    
+    @State private var showCompleted = false
+
     var body: some View {
-        NavigationView {
+        let activeTasks = taskManager.activeTasksForPriority(priority)
+        let completedTasks = taskManager.completedTasksForPriority(priority)
+
+        return NavigationView {
             VStack(spacing: 0) {
                 // Header
                 VStack(spacing: 12) {
@@ -571,26 +585,37 @@ struct PriorityDetailView: View {
                     }
                     
                     HStack {
-                        Text("\(taskManager.tasksForPriority(priority).count) tasks")
+                        Text("\(activeTasks.count) tasks")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Spacer()
-                        
-                        Text("\(taskManager.tasksForPriority(priority).filter { $0.isCompleted }.count) completed")
+
+                        Text("\(completedTasks.count) completed")
                             .font(.caption)
                             .foregroundColor(.green)
                     }
                 }
                 .padding()
                 .background(priority.color.opacity(0.1))
-                
+
                 // Task List
                 List {
-                    ForEach(taskManager.tasksForPriority(priority)) { task in
+                    ForEach(activeTasks) { task in
                         TaskRowView(task: task, taskManager: taskManager)
                     }
-                    .onDelete(perform: deleteTasks)
+                    .onDelete(perform: deleteActiveTasks)
+
+                    if !completedTasks.isEmpty {
+                        DisclosureGroup(isExpanded: $showCompleted) {
+                            ForEach(completedTasks) { task in
+                                TaskRowView(task: task, taskManager: taskManager)
+                            }
+                            .onDelete(perform: deleteCompletedTasks)
+                        } label: {
+                            Text("Completed (\(completedTasks.count))")
+                        }
+                    }
                 }
                 .listStyle(PlainListStyle())
             }
@@ -629,8 +654,15 @@ struct PriorityDetailView: View {
         }
     }
     
-    private func deleteTasks(offsets: IndexSet) {
-        let tasksToDelete = taskManager.tasksForPriority(priority)
+    private func deleteActiveTasks(offsets: IndexSet) {
+        let tasksToDelete = taskManager.activeTasksForPriority(priority)
+        for index in offsets {
+            taskManager.deleteTask(tasksToDelete[index])
+        }
+    }
+
+    private func deleteCompletedTasks(offsets: IndexSet) {
+        let tasksToDelete = taskManager.completedTasksForPriority(priority)
         for index in offsets {
             taskManager.deleteTask(tasksToDelete[index])
         }
