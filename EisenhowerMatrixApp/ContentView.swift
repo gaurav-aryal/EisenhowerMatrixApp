@@ -377,6 +377,7 @@ struct ContentView: View {
                             path.addLine(to: CGPoint(x: width, y: height / 2))
                         }
                         .stroke(Color.primary, lineWidth: 2)
+                        .allowsHitTesting(false)
                     }
                 }
 
@@ -896,27 +897,42 @@ struct TaskDetailView: View {
                         Text("Title")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        
+
                         Text(task.title)
                             .font(.title2)
                             .fontWeight(.semibold)
                             .strikethrough(task.isCompleted)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Description")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        
+
                         Text(task.description)
                             .font(.body)
                             .strikethrough(task.isCompleted)
                     }
-                    
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Date")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+
+                        if let due = task.dueDate {
+                            Text(due, style: .date)
+                                .font(.body)
+                        } else {
+                            Text(task.dateCreated, style: .date)
+                                .font(.body)
+                        }
+                    }
+
                     Spacer()
                 }
                 .padding()
-                
+                .frame(maxWidth: .infinity, alignment: .leading)
+
                 Spacer()
             }
             .navigationTitle("Task Details")
