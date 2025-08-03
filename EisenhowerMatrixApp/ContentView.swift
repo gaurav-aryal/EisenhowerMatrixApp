@@ -392,6 +392,8 @@ struct ContentView: View {
             // Header with title - clickable to open full list
             VStack(spacing: 4) {
                 HStack {
+                    Spacer()
+
                     Image(systemName: priority.icon)
                         .foregroundColor(color)
                         .font(.title3)
@@ -400,15 +402,14 @@ struct ContentView: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(color)
-                        .multilineTextAlignment(.leading)
+                        .multilineTextAlignment(.center)
                         .lineLimit(2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
                         .minimumScaleFactor(0.8)
                         .onTapGesture {
                             selectedPriority = priority
                             showingDetail = true
                         }
-                    
+
                     Spacer()
                 }
             }
