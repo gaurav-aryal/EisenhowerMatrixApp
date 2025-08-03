@@ -217,7 +217,8 @@ class TaskManager: ObservableObject {
         if let sourceIndexInMain = tasks.firstIndex(where: { $0.id == sourceTask.id }),
            let destIndexInMain = tasks.firstIndex(where: { $0.id == destinationTask.id }) {
             let task = tasks.remove(at: sourceIndexInMain)
-            tasks.insert(task, at: destIndexInMain)
+            let adjustedDestination = sourceIndexInMain < destIndexInMain ? destIndexInMain - 1 : destIndexInMain
+            tasks.insert(task, at: adjustedDestination)
             saveTasks()
         }
     }
@@ -255,6 +256,10 @@ struct TaskDropDelegate: DropDelegate {
         }
     }
 
+    func dropUpdated(_ info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
     func performDrop(info: DropInfo) -> Bool {
         draggedTaskId = nil
         return true
@@ -265,6 +270,10 @@ struct QuadrantDropDelegate: DropDelegate {
     let priority: TaskPriority
     let taskManager: TaskManager
     @Binding var draggedTaskId: UUID?
+
+    func dropUpdated(_ info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
 
     func performDrop(info: DropInfo) -> Bool {
         guard let draggedId = draggedTaskId,
