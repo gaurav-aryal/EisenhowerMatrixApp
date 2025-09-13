@@ -331,7 +331,6 @@ struct ContentView: View {
     @State private var selectedPriorityForAdd: TaskPriority?
     @State private var selectedTask: TaskItem?
     @State private var showingAddTask = false
-    @State private var showingTaskDetail = false
     @State private var isDragging = false
     @State private var draggedTaskId: UUID?
     @State private var backgroundMode: BackgroundMode = .white
@@ -393,10 +392,8 @@ struct ContentView: View {
         .sheet(item: $selectedPriority) { priority in
             PriorityDetailView(taskManager: taskManager, priority: priority, draggedTaskId: $draggedTaskId)
         }
-        .sheet(isPresented: $showingTaskDetail) {
-            if let task = selectedTask {
-                TaskDetailView(task: task, taskManager: taskManager)
-            }
+        .sheet(item: $selectedTask) { task in
+            TaskDetailView(task: task, taskManager: taskManager)
         }
     }
     
@@ -432,7 +429,6 @@ struct ContentView: View {
                             priority: priority,
                             color: color,
                             selectedTask: $selectedTask,
-                            showingTaskDetail: $showingTaskDetail,
                             draggedTaskId: $draggedTaskId
                         )
                     }
@@ -973,7 +969,6 @@ struct TaskRowInQuadrant: View {
     let priority: TaskPriority
     let color: Color
     @Binding var selectedTask: TaskItem?
-    @Binding var showingTaskDetail: Bool
     @Binding var draggedTaskId: UUID?
     
     var body: some View {
@@ -995,7 +990,6 @@ struct TaskRowInQuadrant: View {
                     .lineLimit(1)
                     .onTapGesture {
                         selectedTask = task
-                        showingTaskDetail = true
                     }
 
                 Text(task.description)
@@ -1004,7 +998,6 @@ struct TaskRowInQuadrant: View {
                     .lineLimit(1)
                     .onTapGesture {
                         selectedTask = task
-                        showingTaskDetail = true
                     }
             }
 
@@ -1027,7 +1020,6 @@ struct TaskRowInQuadrant: View {
         .contentShape(Rectangle())
         .onTapGesture {
             selectedTask = task
-            showingTaskDetail = true
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
