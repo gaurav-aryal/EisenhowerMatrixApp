@@ -468,7 +468,7 @@ struct ContentView: View {
                         Image(systemName: "plus.circle.fill")
                             .foregroundColor(color)
                             .font(.caption)
-                        Text("Add Task")
+                        Text("Add Priority")
                             .font(.caption)
                             .foregroundColor(color)
                     }
@@ -492,7 +492,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Add Task View
+// MARK: - Add Priority View
 struct AddTaskView: View {
     @ObservedObject var taskManager: TaskManager
     let priority: TaskPriority
@@ -506,8 +506,8 @@ struct AddTaskView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Task Details")) {
-                    TextField("Task title", text: $title)
+                Section(header: Text("Priority Details")) {
+                    TextField("Priority title", text: $title)
                     TextField("Description", text: $description)
                 }
 
@@ -524,7 +524,7 @@ struct AddTaskView: View {
                         .fontWeight(.semibold)
                 }
             }
-            .navigationTitle("Add Task")
+            .navigationTitle("Add Priority")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -577,7 +577,7 @@ struct PriorityDetailView: View {
                         }
 
                         HStack {
-                            Text("\(activeTasks.count) tasks")
+                            Text("\(activeTasks.count) priorities")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
@@ -645,7 +645,7 @@ struct PriorityDetailView: View {
         case .notUrgentImportant:
             return "Schedule - Plan these for later"
         case .notUrgentNotImportant:
-            return "Eliminate - Consider removing these tasks"
+            return "Eliminate - Consider removing these priorities"
         }
     }
     
@@ -698,7 +698,7 @@ struct TaskRowView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 if isEditing {
-                    TextField("Task title", text: $editedTitle)
+                    TextField("Priority title", text: $editedTitle)
                         .font(.body)
                         .fontWeight(.medium)
                         .onSubmit {
@@ -767,7 +767,7 @@ struct TaskRowView: View {
     }
 }
 
-// MARK: - Edit Task View
+// MARK: - Edit Priority View
 struct EditTaskView: View {
     @ObservedObject var taskManager: TaskManager
     let task: TaskItem
@@ -792,8 +792,8 @@ struct EditTaskView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Task Details")) {
-                    TextField("Task title", text: $title)
+                Section(header: Text("Priority Details")) {
+                    TextField("Priority title", text: $title)
                     TextField("Description", text: $description)
                 }
 
@@ -815,7 +815,7 @@ struct EditTaskView: View {
                     .pickerStyle(MenuPickerStyle())
                 }
             }
-            .navigationTitle("Edit Task")
+            .navigationTitle("Edit Priority")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -832,7 +832,7 @@ struct EditTaskView: View {
     }
 }
 
-// MARK: - Task Detail View
+// MARK: - Priority Item Detail View
 struct TaskDetailView: View {
     let task: TaskItem
     @ObservedObject var taskManager: TaskManager
@@ -931,7 +931,7 @@ struct TaskDetailView: View {
 
                 Spacer()
             }
-            .navigationTitle("Task Details")
+            .navigationTitle("Priority Details")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
@@ -957,7 +957,7 @@ struct TaskDetailView: View {
         case .notUrgentImportant:
             return "Schedule - Plan these for later"
         case .notUrgentNotImportant:
-            return "Eliminate - Consider removing these tasks"
+            return "Eliminate - Consider removing these priorities"
         }
     }
 }
