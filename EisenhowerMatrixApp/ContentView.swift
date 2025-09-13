@@ -90,7 +90,6 @@ enum TaskPriority: String, CaseIterable, Codable, Identifiable {
 // MARK: - App Appearance
 enum BackgroundMode: String, CaseIterable, Identifiable {
     case dark = "Dark"
-    case gray = "Gray"
     case white = "White"
 
     var id: String { rawValue }
@@ -99,8 +98,6 @@ enum BackgroundMode: String, CaseIterable, Identifiable {
         switch self {
         case .dark:
             return .black
-        case .gray:
-            return Color(red: 0.7, green: 0.7, blue: 0.7)
         case .white:
             return .white
         }
@@ -333,7 +330,7 @@ struct ContentView: View {
     @State private var showingAddTask = false
     @State private var isDragging = false
     @State private var draggedTaskId: UUID?
-    @State private var backgroundMode: BackgroundMode = .white
+    @State private var backgroundMode: BackgroundMode = .dark
     
     var body: some View {
         NavigationView {
