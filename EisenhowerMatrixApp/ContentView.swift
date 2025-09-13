@@ -758,6 +758,14 @@ struct TaskRowView: View {
                     .font(.title3)
             }
             .buttonStyle(PlainButtonStyle())
+            Button(action: {
+                taskManager.deleteTask(task)
+            }) {
+                Image(systemName: "trash")
+                    .foregroundColor(.red)
+                    .font(.title3)
+            }
+            .buttonStyle(PlainButtonStyle())
             if let due = task.dueDate {
                 Text(due, style: .date)
                     .font(.caption2)
