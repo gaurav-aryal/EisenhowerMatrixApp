@@ -445,16 +445,20 @@ struct ContentView: View {
                                 .fontWeight(.medium)
                         }
                         .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
-                            priority: priority, 
-                            taskManager: taskManager, 
+                            priority: priority,
+                            taskManager: taskManager,
                             draggedTaskId: $draggedTaskId
                         ))
                     }
                 }
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                selectedPriority = priority
+            }
             .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
-                priority: priority, 
-                taskManager: taskManager, 
+                priority: priority,
+                taskManager: taskManager,
                 draggedTaskId: $draggedTaskId
             ))
 
@@ -484,9 +488,13 @@ struct ContentView: View {
             Rectangle()
                 .stroke(color, lineWidth: 1)
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedPriority = priority
+        }
         .onDrop(of: [UTType.plainText], delegate: QuadrantDropDelegate(
-            priority: priority, 
-            taskManager: taskManager, 
+            priority: priority,
+            taskManager: taskManager,
             draggedTaskId: $draggedTaskId
         ))
     }
