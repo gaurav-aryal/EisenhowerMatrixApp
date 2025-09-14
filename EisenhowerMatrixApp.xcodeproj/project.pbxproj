@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+       objectVersion = 54;
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
@@ -310,43 +310,44 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 1640;
+                               LastSwiftUpdateCheck = 1400;
+                               LastUpgradeCheck = 1400;
 				TargetAttributes = {
-					1547163A2E3F5B5000787151 = {
-						CreatedOnToolsVersion = 16.4;
-					};
-					154716462E3F5B5100787151 = {
-						CreatedOnToolsVersion = 16.4;
-						TestTargetID = 1547163A2E3F5B5000787151;
-					};
-					154716502E3F5B5100787151 = {
-						CreatedOnToolsVersion = 16.4;
-						TestTargetID = 1547163A2E3F5B5000787151;
-					};
-					1549218A2E3E93010025CFB4 = {
-						CreatedOnToolsVersion = 16.4;
-					};
-					154921982E3E93020025CFB4 = {
-						CreatedOnToolsVersion = 16.4;
-						TestTargetID = 1549218A2E3E93010025CFB4;
-					};
-					154921A22E3E93020025CFB4 = {
-						CreatedOnToolsVersion = 16.4;
-						TestTargetID = 1549218A2E3E93010025CFB4;
-					};
-				};
-			};
-			buildConfigurationList = 154921862E3E93010025CFB4 /* Build configuration list for PBXProject "EisenhowerMatrixApp" */;
-			developmentRegion = en;
-			hasScannedForEncodings = 0;
+                                       1547163A2E3F5B5000787151 = {
+                                               CreatedOnToolsVersion = 14.0;
+                                       };
+                                       154716462E3F5B5100787151 = {
+                                               CreatedOnToolsVersion = 14.0;
+                                               TestTargetID = 1547163A2E3F5B5000787151;
+                                       };
+                                       154716502E3F5B5100787151 = {
+                                               CreatedOnToolsVersion = 14.0;
+                                               TestTargetID = 1547163A2E3F5B5000787151;
+                                       };
+                                       1549218A2E3E93010025CFB4 = {
+                                               CreatedOnToolsVersion = 14.0;
+                                       };
+                                       154921982E3E93020025CFB4 = {
+                                               CreatedOnToolsVersion = 14.0;
+                                               TestTargetID = 1549218A2E3E93010025CFB4;
+                                       };
+                                       154921A22E3E93020025CFB4 = {
+                                               CreatedOnToolsVersion = 14.0;
+                                               TestTargetID = 1549218A2E3E93010025CFB4;
+                                       };
+                               };
+                       };
+                       buildConfigurationList = 154921862E3E93010025CFB4 /* Build configuration list for PBXProject "EisenhowerMatrixApp" */;
+                       compatibilityVersion = "Xcode 14.0";
+                       developmentRegion = en;
+                       hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
 			mainGroup = 154921822E3E93010025CFB4;
-			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+                       minimizedProjectReferenceProxies = 1;
+                       preferredProjectObjectVersion = 54;
 			productRefGroup = 1549218C2E3E93010025CFB4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
